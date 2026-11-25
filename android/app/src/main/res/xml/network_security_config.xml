@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Plain HTTP only for the two captive-portal probes (they must be HTTP to be intercepted).
+     Everything else, including the portal, is HTTPS with the system trust store. -->
+<network-security-config>
+    <base-config cleartextTrafficPermitted="false" />
+    <domain-config cleartextTrafficPermitted="true">
+        <domain includeSubdomains="false">neverssl.com</domain>
+        <domain includeSubdomains="false">connectivitycheck.gstatic.com</domain>
+    </domain-config>
+</network-security-config>

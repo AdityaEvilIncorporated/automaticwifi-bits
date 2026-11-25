@@ -2,7 +2,13 @@ plugins {
     kotlin("jvm")
 }
 
-kotlin { jvmToolchain(17) }
+// Java 17 bytecode, built by whatever JDK >= 17 runs Gradle (17 in the test container, 21 in the
+// Android SDK image); Android's :app also targets 17.
+java {
+    sourceCompatibility = JavaVersion.VERSION_17
+    targetCompatibility = JavaVersion.VERSION_17
+}
+kotlin { compilerOptions { jvmTarget.set(org.jetbrains.kotlin.gradle.dsl.JvmTarget.JVM_17) } }
 
 dependencies {
     // HTML form parsing for the login page (see ARCHITECTURE.md "Dependencies").
