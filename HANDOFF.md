@@ -5,8 +5,20 @@ Do routine review actions (merge/reject/take, small follow-up fixes with tests, 
 dev) without asking; report afterwards. Stop only for what CLAUDE.md reserves for a human.
 
 ## Current task
-All 22 tasks done (2026-11-25). T32 taken over from the worker (PRB-002). Next: Definition of done.
-Earlier: review rounds 1-3 merged everything except T24/T32; T07 done by me (17d553a).
+Deploy v0.1.0 (pre-release, "beta: not yet verified on the real BITS portal"). Definition of done
+is complete (reports/TEST_REPORT.md, SHIPPING.md). BLOCKED on two owner-only GitHub settings
+(HUMAN_NEEDED.md, human notified 2026-11-26): gh token lacks Secrets write (HTTP 403), Pages not
+enabled. Review queue empty, no NEEDS_SUPERVISOR, all HARD tasks done.
+
+## Release state (2026-11-26)
+- Signing key: ~/.agent-secrets provider `android-automaticwifi-bits` (4 keys). Not in the repo.
+- Local dry run with the real key: signed APK + 6 desktop assets + SHA256SUMS, check-dist OK.
+- Security review: fixed/accepted (DECISIONS.md). Second opinion release: round 1 block (8 fixed),
+  round 2 concerns (1 fixed). govulncheck clean with toolchain go1.26.11.
+- RELEASE_TAG=v0.1.0; RELEASE_BETA holds the label; release.yml checks tag format, RELEASE_TAG
+  and that the commit is on dev before the signing key is used.
+- GitHub default branch is dev; main exists only locally (never push it). So the playbook's
+  `gh pr create --base main` cannot run; DEPLOYED.md records this.
 
 ## Done
 - intake read; PLAN.md, ARCHITECTURE.md, SCHEDULE.md, DECISIONS.md written.
@@ -32,10 +44,13 @@ Earlier: review rounds 1-3 merged everything except T24/T32; T07 done by me (17d
 See DECISIONS.md.
 
 ## Next 3 steps
-1. Definition of done step 0: security-reviewer subagent on the whole diff since main, e2e-runner
-   for the PLAN.md flows (desktop flows are Go e2e tests; site page via Playwright).
-2. Then the rest of the Definition of done: security-reviewer + e2e-runner subagents, TEST_REPORT.md, SHIPPING.md.
-3. Deploy: GitHub repo, release keystore (bs-secret + Actions secrets), tag, Pages; second-opinion release.
+1. When the human replies done: `bs-secret.sh run android-automaticwifi-bits -- bash scripts/set-gh-secrets.sh`
+   (expect 4 ANDROID_* secrets listed).
+2. `git tag v0.1.0 <tested dev commit> && git push origin v0.1.0`; watch the release run
+   (gh run list/watch if permitted, else the release page) and the pages run (re-run pages via a
+   dev push or workflow_dispatch after Pages is enabled).
+3. Verify: release is a pre-release with 7 assets; Pages URL shows the banner and links resolve;
+   write DEPLOYED.md, notify LIVE with both URLs.
 
 ## Known problems
 - Desktop GUI paths (tray, osascript/Get-Credential/zenity dialogs, toasts, Run key, LaunchAgent
