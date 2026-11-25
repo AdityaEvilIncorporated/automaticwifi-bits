@@ -15,7 +15,7 @@ data class PortalConfig(
     val pinnedCertSha256: String = "",
 ) {
     /** "https://{host lower-cased}:{port}", port always written. */
-    fun portalBase(): String = TODO("T21")
+    fun portalBase(): String = "https://${portalHost.lowercase()}:$portalPort"
 
     companion object {
         /**
@@ -23,12 +23,29 @@ data class PortalConfig(
          * check_url, portal_host, portal_port, username_field, ...) on top of the defaults.
          * Unknown keys are ignored.
          */
-        fun fromOverrides(overrides: Map<String, Any?>): PortalConfig = TODO("T21")
+        fun fromOverrides(overrides: Map<String, Any?>): PortalConfig {
+            val d = PortalConfig()
+            return PortalConfig(
+                checkUrl = overrides["check_url"] as? String ?: d.checkUrl,
+                fallbackCheckUrl = overrides["fallback_check_url"] as? String ?: d.fallbackCheckUrl,
+                portalHost = overrides["portal_host"] as? String ?: d.portalHost,
+                portalPort = (overrides["portal_port"] as? Number)?.toInt() ?: d.portalPort,
+                loginPath = overrides["login_path"] as? String ?: d.loginPath,
+                usernameField = overrides["username_field"] as? String ?: d.usernameField,
+                passwordField = overrides["password_field"] as? String ?: d.passwordField,
+                magicField = overrides["magic_field"] as? String ?: d.magicField,
+                redirectField = overrides["redirect_field"] as? String ?: d.redirectField,
+                pinnedCertSha256 = overrides["pinned_cert_sha256"] as? String ?: d.pinnedCertSha256,
+            )
+        }
     }
 }
 
 /** Campus credentials. toString() never shows the password. */
 data class Credentials(val username: String, val password: String) {
     /** "Credentials(username=<u>, password=[redacted])"; "password=[]" when empty. */
-    override fun toString(): String = TODO("T21")
+    override fun toString(): String {
+        val pw = if (password.isEmpty()) "[]" else "[redacted]"
+        return "Credentials(username=$username, password=$pw)"
+    }
 }
