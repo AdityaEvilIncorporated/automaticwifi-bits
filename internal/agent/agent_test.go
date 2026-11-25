@@ -192,3 +192,11 @@ func TestInterfaceFingerprint(t *testing.T) {
 }
 
 var _ notify.Notifier = (*countNotifier)(nil)
+
+func TestRandomJitterRange(t *testing.T) {
+	for i := 0; i < 1000; i++ {
+		if j := randomJitter(); j < -MaxJitter || j >= MaxJitter {
+			t.Fatalf("jitter %v out of range", j)
+		}
+	}
+}

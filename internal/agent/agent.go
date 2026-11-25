@@ -4,7 +4,8 @@ package agent
 
 import (
 	"context"
-	"math/rand/v2"
+	"crypto/rand"
+	"encoding/binary"
 	"net"
 	"sort"
 	"strings"
@@ -62,9 +63,7 @@ func (a *Agent) init() {
 			a.PollInterval = NetworkPollInterval
 		}
 		if a.Jitter == nil {
-			a.Jitter = func() time.Duration {
-				return time.Duration(rand.Int64N(int64(2*MaxJitter))) - MaxJitter
-			}
+			a.Jitter = randomJitter
 		}
 	})
 }
@@ -196,4 +195,14 @@ func InterfaceFingerprint() (string, error) {
 	}
 	sort.Strings(out)
 	return strings.Join(out, ","), nil
+}
+
+// randomJitter returns a uniform duration in [-MaxJitter, MaxJitter).
+func randomJitter() time.Duration {
+	var b [8]byte
+	if _, err := rand.Read(b[:]); err != nil {
+		return 0
+	}
+	span := uint64(2 * MaxJitter)
+	return time.Duration(binary.LittleEndian.Uint64(b[:])%span) - MaxJitter
 }

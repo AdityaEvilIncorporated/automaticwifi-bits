@@ -1,4 +1,4 @@
-// Command autowifi is the desktop client (macOS, Windows, Linux). HARD task T14.
+// Command autowifi is the desktop client (macOS, Windows, Linux).
 //
 //	autowifi run                 background agent (tray icon unless --no-tray); default when
 //	                             started with no arguments by the login item
@@ -16,12 +16,36 @@
 // Global flags: --config <path> (default config.DefaultPath()).
 package main
 
+import (
+	"context"
+	"os"
+	"os/signal"
+	"runtime"
+	"syscall"
+)
+
 // version is set at build time: -ldflags "-X main.version=v1.2.3".
 var version = "dev"
 
 // repo is OWNER/NAME for the update check, set at build time from RELEASE_REPO.
 var repo = ""
 
+func init() {
+	// The tray (Cocoa on macOS) must run on the process's main thread.
+	runtime.LockOSThread()
+}
+
 func main() {
-	panic("not implemented")
+	args := os.Args[1:]
+	if len(args) > 0 && args[0] != "run" {
+		attachConsole() // Windows GUI build: print to the terminal that started us
+	}
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+	e, err := osEnv(ctx)
+	if err != nil {
+		os.Stderr.WriteString("autowifi: " + err.Error() + "\n")
+		os.Exit(1)
+	}
+	os.Exit(realMain(args, e))
 }
