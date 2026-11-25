@@ -9,7 +9,7 @@ Read PROTOCOL.md section 2 and the docstrings in internal/portal/client.go.
 - `OnCampus`: `net.ParseIP(host) != nil` → true without lookup; else LookupHost with a 5 s timeout.
 - Reading bodies: `io.ReadAll(io.LimitReader(resp.Body, MaxBody))`, always close the body.
 - `Login`: build the POST body with `url.Values`-style escaping BUT in protocol order (username, password, magic, redirect): url.Values.Encode sorts keys, so build the string yourself with `url.QueryEscape(k)+"="+url.QueryEscape(v)` joined by "&". The test checks the exact body.
-- Errors: wrap with a fixed description and the host only, e.g. `fmt.Errorf("login POST to %s: %w", cfg.PortalHost, err)`. *url.Error contains the URL, which is fine (no credentials in URLs), but never include the body.
+- Errors (PROTOCOL.md section 9: logs never hold the magic, tokens or URLs with query strings): never return a `*url.Error` as is, because its message contains the full URL (`.../fgtauth?<magic>`, `.../keepalive?<token>`). Unwrap it (`var ue *url.Error; if errors.As(err, &ue) { err = ue.Err }`) and wrap with a fixed description and the host only, e.g. `fmt.Errorf("login page GET to %s: %w", c.Cfg.PortalHost, err)`. Same for Logout's returned error. Never include the request body. `TestErrorsNeverContainMagicOrToken` checks this.
 - `CheckOnce`: OnCampus → ProbeOnce (error → PortalError) → Online/Foreign return → Malformed → FormChanged → get() (errors.Is ErrNotFound → NoCredentials; other error → PortalError) → Login.
 
 ## Imitate

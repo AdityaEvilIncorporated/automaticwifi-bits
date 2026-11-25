@@ -354,3 +354,27 @@ func TestMagicIsSingleUse(t *testing.T) {
 		t.Fatalf("second: %s %v", r.Outcome, r.Err)
 	}
 }
+
+func TestErrorsNeverContainMagicOrToken(t *testing.T) {
+	// A portal port nothing listens on: every portal request fails with a network error.
+	dead := httptest.NewServer(http.NotFoundHandler())
+	_, port, _ := net.SplitHostPort(strings.TrimPrefix(dead.URL, "http://"))
+	dead.Close()
+	cfg := config.Default()
+	cfg.PortalHost = "127.0.0.1"
+	cfg.PortalPort, _ = strconv.Atoi(port)
+	c := &Client{Cfg: cfg, Portal: &http.Client{Timeout: 2 * time.Second, CheckRedirect: noRedirect}, Resolver: okResolver{}}
+	magic := "deadbeefcafe0123"
+	r := c.Login(context.Background(), ProbeResult{Kind: ProbeCaptive, Magic: magic, MagicURL: cfg.PortalBase() + "/fgtauth?" + magic}, creds.Credentials{Username: "u", Password: "p"})
+	if r.Outcome != PortalError || r.Err == nil {
+		t.Fatalf("outcome %s err %v", r.Outcome, r.Err)
+	}
+	if strings.Contains(r.Err.Error(), magic) || strings.Contains(r.Err.Error(), "?") {
+		t.Fatalf("error leaks the magic URL: %v", r.Err)
+	}
+	sess := "sess1111sess1111"
+	err := c.Logout(context.Background(), cfg.PortalBase()+"/logout?"+sess)
+	if err == nil || strings.Contains(err.Error(), sess) {
+		t.Fatalf("logout error leaks the token: %v", err)
+	}
+}

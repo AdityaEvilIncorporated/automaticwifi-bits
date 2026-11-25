@@ -101,7 +101,7 @@
         "T04"
       ],
       "acceptance": "go test ./internal/portal/ -count=1 -run 'TestClassifyProbe|TestParseLoginPage|TestClassifyLoginReply|TestKeepaliveSharedCases|TestOnPortal'",
-      "status": "doing",
+      "status": "done",
       "owner": "agy-agent",
       "attempts": 0,
       "rung": 1,
@@ -133,7 +133,7 @@
         "T05",
         "T07"
       ],
-      "acceptance": "go test ./internal/portal/ -count=1 -run 'TestScenarios|TestCheckOnce|TestOnCampus|TestCredentialsReadOnly|TestCredsGet|TestProbe|TestLogin|TestKeepaliveAndLogout|TestMagic'",
+      "acceptance": "go test ./internal/portal/ -count=1 -run 'TestScenarios|TestCheckOnce|TestOnCampus|TestCredentialsReadOnly|TestCredsGet|TestProbe|TestLogin|TestKeepaliveAndLogout|TestMagic|TestErrorsNeverContain'",
       "status": "todo",
       "owner": null,
       "attempts": 0,
@@ -212,7 +212,7 @@
         "T08"
       ],
       "acceptance": "go test ./internal/engine/ -count=1",
-      "status": "doing",
+      "status": "done",
       "owner": "agy-agent",
       "attempts": 0,
       "rung": 1,
