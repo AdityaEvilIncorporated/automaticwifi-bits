@@ -55,3 +55,9 @@
 - 2026-11-25 "Log out" ends the current session only; automatic login resumes at the next scheduled
   check (desktop timer / Android periodic work), same on both platforms. A "pause" feature would be
   a new requirement.
+- 2026-11-25 GitHub Actions are pinned to full commit SHAs (tag in a comment): the release job
+  holds the Android signing key, so a repointed tag would be a supply-chain hole. Update pins
+  deliberately (git ls-remote the tag, review the diff).
+- 2026-11-25 Process slip: T32 (64a08cf) was committed and pushed while verify.sh was failing
+  (semgrep, unpinned actions) because the commit was chained with ';' after the check. Fixed in the
+  next commit; from now on the commit is chained with '&&' after verify.
