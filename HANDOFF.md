@@ -4,7 +4,7 @@
 Review round 1 done (2026-11-25). Merged: T01 T02 T03 T04 T08 T10 T11 T12 T21 T23 T31.
 T30: rejected once, resubmission good but merge conflicted (REVIEW_L1.md on both sides) and the
 merge script dropped the branch; recovered commit dcc95c8, took it, added the Get Group step, done.
-Round 2 merged: T10W.
+Round 2 merged: T10W, T22.
 
 ## Done
 - intake read; PLAN.md, ARCHITECTURE.md, SCHEDULE.md, DECISIONS.md written.
@@ -16,8 +16,8 @@ Round 2 merged: T10W.
 - TASKS.json (22 tasks) and tasks/<ID>/BRIEF.md for every EASY/MEDIUM task.
 
 ## Half-done
-- T05 and T09 are NEEDS_SUPERVISOR: read tasks/T05/NOTES.md and tasks/T09/NOTES.md next.
-- T22 in progress with workers.
+- T05, T09 requeued (todo, attempts 0): both passed acceptance twice but the gate failed on stale-
+  worktree regressions (PRB-001); their code was never committed, so they restart from dev.
 
 ## Supervisor fixes after review (commit "review fixes")
 - creds file store: corrupt JSON -> ErrNotFound, never the json error (it can quote file bytes). Test added.
