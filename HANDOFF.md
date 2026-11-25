@@ -2,7 +2,9 @@
 
 ## Current task
 Review round 1 done (2026-11-25). Merged: T01 T02 T03 T04 T08 T10 T11 T12 T21 T23 T31.
-Rejected: T30 (Shortcut regex misses the magic after a redirect; Stop step must be required).
+T30: rejected once, resubmission good but merge conflicted (REVIEW_L1.md on both sides) and the
+merge script dropped the branch; recovered commit dcc95c8, took it, added the Get Group step, done.
+Round 2 merged: T10W.
 
 ## Done
 - intake read; PLAN.md, ARCHITECTURE.md, SCHEDULE.md, DECISIONS.md written.
@@ -14,7 +16,8 @@ Rejected: T30 (Shortcut regex misses the magic after a redirect; Stop step must 
 - TASKS.json (22 tasks) and tasks/<ID>/BRIEF.md for every EASY/MEDIUM task.
 
 ## Half-done
-- T30 back with workers (note in tasks/T30/BRIEF.md). TestShortcutGuide fails on dev until it merges.
+- T05 and T09 are NEEDS_SUPERVISOR: read tasks/T05/NOTES.md and tasks/T09/NOTES.md next.
+- T22 in progress with workers.
 
 ## Supervisor fixes after review (commit "review fixes")
 - creds file store: corrupt JSON -> ErrNotFound, never the json error (it can quote file bytes). Test added.
@@ -32,6 +35,8 @@ See DECISIONS.md.
 3. T14 agent/CLI/tray once T06, T09, T13 are merged. In T14: open update URLs only if they start with https://github.com/.
 
 ## Known problems
+- bs-task.py merge conflicts when dev already has tasks/<ID>/REVIEW_L1.md (rejected tasks) and then
+  deletes task/<ID>. Do not commit REVIEW_L1.md of tasks still in flight; recover with git fsck.
 - ParseForms (T04) relies on the html5 tree: a <form> placed directly inside <table> loses its
   inputs (html5 foster-parenting). Standard FortiGate pages nest the table inside the form, so OK
   for now; if `capture` on campus shows no fields, switch to a tokenizer-based pass.

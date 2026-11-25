@@ -513,7 +513,7 @@
       "size": 2,
       "depends": [],
       "acceptance": "go test ./internal/docscheck/ -count=1 -run TestShortcutGuide",
-      "status": "doing",
+      "status": "done",
       "attempts": 0,
       "rung": 0,
       "files": [
