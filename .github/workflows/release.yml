@@ -32,7 +32,12 @@ jobs:
         with:
           distribution: temurin
           java-version: "17"
-      - uses: android-actions/setup-android@9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407 # v3
+      # The ubuntu runner image ships the Android SDK (ANDROID_HOME, accepted licences); AGP
+      # downloads any missing platform/build-tools itself. No third-party setup action.
+      - name: Android SDK present
+        run: |
+          [ -n "${ANDROID_HOME:-}" ] && [ -d "$ANDROID_HOME" ] || { echo "::error::ANDROID_HOME not set on this runner"; exit 1; }
+          ls "$ANDROID_HOME/platforms" "$ANDROID_HOME/build-tools" | tail -n 6
 
       # Runs before any secret is in scope: a well-formed tag (it feeds shell arithmetic and
       # -ldflags), equal to RELEASE_TAG (the download page links it), on a commit already on dev
@@ -84,7 +89,7 @@ jobs:
         if: always()
         run: rm -f "$RUNNER_TEMP/release.jks"
 
-      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: apk
           path: dist/autowifi-bits.apk
@@ -105,7 +110,7 @@ jobs:
       - name: Go tests
         run: go test -race -count=1 ./...
 
-      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8
         with:
           name: apk
           path: dist

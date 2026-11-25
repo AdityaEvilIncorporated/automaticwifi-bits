@@ -90,3 +90,4 @@
   subcommand (--config before it no longer traps SIGINT); guide step number. The PowerShell script
   could not be parse-checked (pwsh in Docker hung); real Windows stays on the manual checklist.
 - 2026-11-25 Release second opinion round 2: "concerns", 1 low (PromptForCredential exception exiting 0) → fixed with $ErrorActionPreference = 'Stop'.
+- 2026-11-26 First real CI runs: setup-android v3 failed (sdkmanager) → removed; the ubuntu image ships the SDK. deploy-pages v4 could not fetch artifact metadata → pages actions moved to configure-pages v6 / upload-pages-artifact v5 / deploy-pages v5; artifact actions to upload v7 / download v8 (SHAs from git ls-remote). v0.1.0 tag moved to the fixed commit (nothing had been published).
