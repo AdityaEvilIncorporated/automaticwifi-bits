@@ -5,20 +5,17 @@ Do routine review actions (merge/reject/take, small follow-up fixes with tests, 
 dev) without asking; report afterwards. Stop only for what CLAUDE.md reserves for a human.
 
 ## Current task
-Deploy v0.1.0 (pre-release, "beta: not yet verified on the real BITS portal"). Definition of done
-is complete (reports/TEST_REPORT.md, SHIPPING.md). BLOCKED on two owner-only GitHub settings
-(HUMAN_NEEDED.md, human notified 2026-11-26): gh token lacks Secrets write (HTTP 403), Pages not
-enabled. Review queue empty, no NEEDS_SUPERVISOR, all HARD tasks done.
+v0.1.0 is LIVE as a GitHub pre-release (DEPLOYED.md). Nothing in progress. Review queue empty,
+no NEEDS_SUPERVISOR, all 22 tasks done.
 
 ## Release state (2026-11-26)
-- Signing key: ~/.agent-secrets provider `android-automaticwifi-bits` (4 keys). Not in the repo.
-- Local dry run with the real key: signed APK + 6 desktop assets + SHA256SUMS, check-dist OK.
-- Security review: fixed/accepted (DECISIONS.md). Second opinion release: round 1 block (8 fixed),
-  round 2 concerns (1 fixed). govulncheck clean with toolchain go1.26.11.
-- RELEASE_TAG=v0.1.0; RELEASE_BETA holds the label; release.yml checks tag format, RELEASE_TAG
-  and that the commit is on dev before the signing key is used.
-- GitHub default branch is dev; main exists only locally (never push it). So the playbook's
-  `gh pr create --base main` cannot run; DEPLOYED.md records this.
+- Release: https://github.com/AdityaEvilIncorporated/automaticwifi-bits/releases/tag/v0.1.0 (pre-release,
+  7 assets, smoke-tested; APK signed with the vault key).
+- Pages deployed from dev, but the account's user-site custom domain (adityaevilincorporated.me →
+  a Render app) redirects the project page to a 404. Owner decision; see DEPLOYED.md open items.
+- Signing key: ~/.agent-secrets provider android-automaticwifi-bits + 4 Actions secrets.
+- CI lessons: no setup-android (runner has the SDK); Pages upload/deploy in separate jobs; job
+  token needs actions: read for artifacts. Tag must equal RELEASE_TAG and be on dev.
 
 ## Done
 - intake read; PLAN.md, ARCHITECTURE.md, SCHEDULE.md, DECISIONS.md written.
@@ -44,13 +41,10 @@ enabled. Review queue empty, no NEEDS_SUPERVISOR, all HARD tasks done.
 See DECISIONS.md.
 
 ## Next 3 steps
-1. When the human replies done: `bs-secret.sh run android-automaticwifi-bits -- bash scripts/set-gh-secrets.sh`
-   (expect 4 ANDROID_* secrets listed).
-2. `git tag v0.1.0 <tested dev commit> && git push origin v0.1.0`; watch the release run
-   (gh run list/watch if permitted, else the release page) and the pages run (re-run pages via a
-   dev push or workflow_dispatch after Pages is enabled).
-3. Verify: release is a pre-release with 7 assets; Pages URL shows the banner and links resolve;
-   write DEPLOYED.md, notify LIVE with both URLs.
+1. Owner: fix or remove the user-site custom domain so the Pages URL serves the download page;
+   then re-check https://adityaevilincorporated.github.io/automaticwifi-bits/.
+2. Owner on campus: CAMPUS_CHECKLIST.md. Fix any differences (config defaults in Go + Kotlin + shared cases).
+3. Then: delete RELEASE_BETA and the banner, bump RELEASE_TAG + page links, tag, push.
 
 ## Known problems
 - Desktop GUI paths (tray, osascript/Get-Credential/zenity dialogs, toasts, Run key, LaunchAgent
