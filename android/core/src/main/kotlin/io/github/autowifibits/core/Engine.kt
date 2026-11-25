@@ -36,11 +36,19 @@ interface EnginePorts {
 object Backoff {
     const val STEADY_MS = 5 * 60_000L
     /** 1 → 5 s, 2 → 15 s, 3 → 60 s, ≥4 → STEADY_MS, ≤0 → STEADY_MS. */
-    fun delayMs(failures: Int): Long = TODO("T23")
+    fun delayMs(failures: Int): Long = when (failures) {
+        1 -> 5_000L
+        2 -> 15_000L
+        3 -> 60_000L
+        else -> STEADY_MS
+    }
 }
 
+private const val NOTIFY_COOLDOWN_MS = 60 * 60_000L
+
 /** At most one notification per hour; a "last" in the future also allows (clock moved back). */
-fun notifyAllowed(lastMs: Long, nowMs: Long): Boolean = TODO("T23")
+fun notifyAllowed(lastMs: Long, nowMs: Long): Boolean =
+    lastMs <= 0L || lastMs > nowMs || (nowMs - lastMs) >= NOTIFY_COOLDOWN_MS
 
 /**
  * Same rules as internal/engine.Engine.Run (read its doc comment: rules 1-5 and "notify r"),
@@ -48,8 +56,85 @@ fun notifyAllowed(lastMs: Long, nowMs: Long): Boolean = TODO("T23")
  * the Android worker runs one check at a time (unique work).
  */
 class Engine(private val portal: PortalApi, private val ports: EnginePorts, var state: SessionState) {
-    fun run(trigger: Trigger): Step = TODO("T23")
-    fun logout(): Unit = TODO("T23")
+    fun run(trigger: Trigger): Step {
+        val step = execute(trigger)
+        ports.save(state)
+        return step
+    }
+
+    private fun execute(trigger: Trigger): Step {
+        if (trigger == Trigger.CREDS_UPDATED) {
+            state = state.copy(credentialsRejected = false, consecutiveFailures = 0)
+        } else {
+            if (state.credentialsRejected && trigger != Trigger.MANUAL) {
+                return Step("paused", Backoff.STEADY_MS)
+            }
+            if (state.loggedIn && trigger == Trigger.TIMER) {
+                if (portal.keepalive(state.keepaliveUrl)) {
+                    state = state.copy(consecutiveFailures = 0)
+                    return Step("keepalive_ok", Backoff.STEADY_MS)
+                }
+                state = state.clearSession()
+            }
+        }
+
+        val r = portal.checkOnce { ports.credentials() }
+        return when (r.outcome) {
+            Outcome.OFF_CAMPUS -> {
+                state = state.clearSession().copy(consecutiveFailures = 0)
+                Step(r.outcome.wire, Backoff.STEADY_MS)
+            }
+            Outcome.ONLINE, Outcome.FOREIGN -> {
+                state = state.copy(consecutiveFailures = 0)
+                Step(r.outcome.wire, Backoff.STEADY_MS)
+            }
+            Outcome.LOGGED_IN -> {
+                state = state.copy(
+                    magicToken = r.magic,
+                    keepaliveUrl = r.keepaliveUrl,
+                    logoutUrl = r.logoutUrl,
+                    consecutiveFailures = 0,
+                    credentialsRejected = false,
+                )
+                Step(r.outcome.wire, Backoff.STEADY_MS)
+            }
+            Outcome.REJECTED -> {
+                state = state.clearSession().copy(credentialsRejected = true, consecutiveFailures = 0)
+                Step(r.outcome.wire, Backoff.STEADY_MS, notifyIfAllowed(NotifyReason.REJECTED))
+            }
+            Outcome.NO_CREDENTIALS -> {
+                state = state.copy(consecutiveFailures = 0)
+                Step(r.outcome.wire, Backoff.STEADY_MS, notifyIfAllowed(NotifyReason.NO_CREDENTIALS))
+            }
+            Outcome.FORM_CHANGED -> {
+                val failures = state.consecutiveFailures + 1
+                state = state.copy(consecutiveFailures = failures)
+                Step(r.outcome.wire, Backoff.delayMs(failures), notifyIfAllowed(NotifyReason.FORM_CHANGED))
+            }
+            Outcome.PORTAL_ERROR -> {
+                val failures = state.consecutiveFailures + 1
+                state = state.copy(consecutiveFailures = failures)
+                val notified = if (failures >= 3) notifyIfAllowed(NotifyReason.REPEATED_ERRORS) else null
+                Step(r.outcome.wire, Backoff.delayMs(failures), notified)
+            }
+        }
+    }
+
+    private fun notifyIfAllowed(reason: NotifyReason): NotifyReason? {
+        val now = ports.now()
+        if (!notifyAllowed(state.lastNotificationAtMs, now)) return null
+        state = state.copy(lastNotificationAtMs = now)
+        ports.notify("AutoWiFi BITS", reason.body)
+        return reason
+    }
+
+    fun logout() {
+        if (state.loggedIn) {
+            portal.logout(state.logoutUrl)
+            state = state.clearSession()
+        }
+        ports.save(state)
+    }
 }
 
 /** The part of [PortalClient] the engine uses (faked in tests). */
