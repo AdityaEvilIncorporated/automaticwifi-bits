@@ -141,3 +141,44 @@ func TestInspectSendsNoRequest(t *testing.T) {
 		t.Fatal("Inspect sent an HTTP request")
 	}
 }
+
+func TestDNSHostRequiresMatchingServerName(t *testing.T) {
+	srv := server(t)
+	// A DNS-named config whose ServerName was blanked (as an IP dial would do) must not pass the
+	// binding check, even with a matching pin.
+	cfg, err := PortalTLSConfig("fw.bits-pilani.ac.in", SPKISHA256(srv.Certificate()), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	blank := cfg.Clone()
+	blank.ServerName = ""
+	if err := get(t, srv, blank); err == nil {
+		t.Fatal("empty server name accepted for a DNS host")
+	}
+}
+
+func TestResumedSessionsAreStillVerified(t *testing.T) {
+	srv := server(t)
+	cfg, err := PortalTLSConfig("127.0.0.1", SPKISHA256(srv.Certificate()), nil)
+	if err != nil {
+		t.Fatal(err)
+	}
+	cfg.ClientSessionCache = tls.NewLRUClientSessionCache(4)
+	tr := &http.Transport{TLSClientConfig: cfg, DisableKeepAlives: true}
+	c := &http.Client{Transport: tr}
+	for i := 0; i < 2; i++ { // second request resumes the session
+		resp, err := c.Get(srv.URL)
+		if err != nil {
+			t.Fatalf("request %d: %v", i, err)
+		}
+		resp.Body.Close()
+	}
+	// Same cache, now a config whose pin does not match: resumption must not skip the check.
+	bad, _ := PortalTLSConfig("127.0.0.1", strings.Repeat("ab", 32), nil)
+	bad.ClientSessionCache = cfg.ClientSessionCache
+	c2 := &http.Client{Transport: &http.Transport{TLSClientConfig: bad, DisableKeepAlives: true}}
+	if resp, err := c2.Get(srv.URL); err == nil {
+		resp.Body.Close()
+		t.Fatal("resumed session bypassed verification")
+	}
+}
