@@ -64,3 +64,13 @@ func TestTrimOne(t *testing.T) {
 		t.Fatal("trimOne")
 	}
 }
+
+// Get-Credential -Message breaks on Windows PowerShell 5.1 (UserName becomes mandatory).
+func TestCredScriptAvoidsGetCredentialMessageSet(t *testing.T) {
+	if strings.Contains(credScript, "Get-Credential") || !strings.Contains(credScript, "$Host.UI.PromptForCredential(") {
+		t.Errorf("credScript must use $Host.UI.PromptForCredential:\n%s", credScript)
+	}
+	if strings.Contains(credScript, "-NonInteractive") {
+		t.Error("-NonInteractive disables the credential prompt")
+	}
+}

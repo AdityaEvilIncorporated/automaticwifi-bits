@@ -1,0 +1,61 @@
+{
+  "issues": [
+    {
+      "file": "internal/prompt/dialog_windows.go",
+      "fix": "Use `$Host.UI.PromptForCredential('AutoWiFi BITS', 'BITS campus ID and password', '', '')` (or bare `Get-Credential` without `-Message`), exit 0 with empty stdout when the returned credential is `$null` (user cancelled), and distinguish real PowerShell errors from user cancellation instead of mapping every `*exec.ExitError` to `ErrCancelled`.",
+      "line": 20,
+      "problem": "`Get-Credential -Message '...'` without `-UserName` fails in Windows PowerShell 5.1 (`powershell.exe`, the default on Windows 10/11). In PowerShell 5.1, `-Message` selects the `Message` parameter set where `-UserName` is mandatory (and passing `-UserName \"\"` also fails parameter binding), so `powershell.exe` prompts for `UserName:` on closed stdin and exits non-zero before any dialog appears. Because lines 29-32 map every `*exec.ExitError` to `ErrCancelled`, both Windows first-run setup and tray \"Set ID and password…\" (the primary flow documented in `site/index.html:153`) silently fail as cancelled with no dialog and no error shown.",
+      "severity": "high"
+    },
+    {
+      "file": "site/index.html",
+      "fix": "Link to `https://github.com/AdityaEvilIncorporated/automaticwifi-bits/blob/HEAD/ios/SHORTCUT_GUIDE.md` (which resolves to the repository's default branch) or `blob/dev/ios/SHORTCUT_GUIDE.md`, and verify the URL in `internal/docscheck/docs_test.go`.",
+      "line": 162,
+      "problem": "The iPhone setup section links to `blob/main/ios/SHORTCUT_GUIDE.md`, but `dev` is the GitHub default branch and `main` is an empty commit (`git ls-tree main` has no files; `.github/workflows/pages.yml` deploys from `dev`). The published GitHub Pages link will return HTTP 404 for iOS users until `main` is manually populated.",
+      "severity": "medium"
+    },
+    {
+      "file": "internal/autostart/autostart_darwin.go",
+      "fix": "Use `exec.Command(\"/usr/bin/launchctl\", args...).CombinedOutput()` and include stderr in the returned error so `\"already\"` checks actually work. Also consider avoiding `launchctl bootout` terminating the running agent mid-call when triggered from the tray's \"Start at login\" toggle while launched by launchd.",
+      "line": 18,
+      "problem": "`launchctl` uses `exec.Command(...).Run()`, which discards stderr and produces an `*exec.ExitError` whose `.Error()` is only `\"exit status N\"`. Line 39 checks `!strings.Contains(strings.ToLower(err.Error()), \"already\")` to ignore an already-bootstrapped LaunchAgent, which can never match. Additionally, calling `launchctl bootout gui/<uid>/<Label>` from inside a launchd-started tray agent sends SIGTERM to itself, so toggling \"Start at login\" off in the macOS tray kills the running tray app.",
+      "severity": "medium"
+    },
+    {
+      "file": "android/core/src/main/kotlin/io/github/autowifibits/core/Classify.kt",
+      "fix": "Loop over subsequent matches in `findPortalToken` until a non-empty `[0-9A-Za-z]+` token is found (matching `internal/portal/classify.go:274-289`), and add a shared test case in `protocol/testcases/login_reply.json`.",
+      "line": 144,
+      "problem": "`findPortalToken` only inspects the first occurrence of `{portalBase}/{path}?` in `location` or `body`. If a login reply mentions `{portalBase}/keepalive?` without a token (e.g. in a JS template/variable) before the real `{portalBase}/keepalive?<token>`, Kotlin returns `\"\"` and misclassifies a valid login as `form_changed` (or `rejected`), diverging from Go's `findPortalToken` in `internal/portal/classify.go:274-289`.",
+      "severity": "medium"
+    },
+    {
+      "file": ".github/workflows/release.yml",
+      "fix": "Force base-10 arithmetic: `export APP_VERSION_CODE=$(( 10#$major * 10000 + 10#$minor * 100 + 10#$patch ))` and assert `APP_VERSION_CODE -ge 1`.",
+      "line": 76,
+      "problem": "`APP_VERSION_CODE=$(( major * 10000 + minor * 100 + patch ))` parses version components without a `10#` base prefix. A tag accepted by the line 41 regex that has a leading zero (e.g. `v0.08.0`) fails bash arithmetic as an invalid octal literal (or miscomputes octal for `010`), and `v0.0.0` would produce an invalid Android `versionCode` of 0.",
+      "severity": "low"
+    },
+    {
+      "file": "internal/agent/agent.go",
+      "fix": "Re-arm `timer = a.wait(step)` inside `case <-a.logout:` where `step := engine.Step{Outcome: OutcomeLoggedOut, Next: backoff.Steady}`.",
+      "line": 98,
+      "problem": "On `case <-a.logout:`, `Agent.Run` logs out and reports `Next: backoff.Steady` to `OnStep`, but does not re-arm `timer`. If the previous keepalive timer was about to fire, `TriggerTimer` runs seconds after logout and immediately logs the user back in instead of waiting the steady 5-minute interval.",
+      "severity": "low"
+    },
+    {
+      "file": "cmd/autowifi/main.go",
+      "fix": "Determine the subcommand after skipping global flags (`--config <path>` / `--config=<path>`) before deciding whether to install `signal.NotifyContext`.",
+      "line": 45,
+      "problem": "`strings.HasPrefix(args[0], \"-\")` installs `signal.NotifyContext` for `os.Interrupt` whenever a global flag like `--config <path>` precedes a subcommand (e.g. `autowifi --config custom.json setup`), causing Ctrl-C at `prompt.Terminal.Ask` to hang on stdin instead of exiting as intended by the comment on lines 46-47.",
+      "severity": "low"
+    },
+    {
+      "file": "ios/SHORTCUT_GUIDE.md",
+      "fix": "Change \"step 7\" to \"step 8\".",
+      "line": 67,
+      "problem": "Troubleshooting tells users to update the `Form` fields in \"step 7\", but step 7 is the `GET /fgtauth` action; the login POST with the `Form` fields is step 8.",
+      "severity": "low"
+    }
+  ],
+  "verdict": "block"
+}

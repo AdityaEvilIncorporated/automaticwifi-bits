@@ -11,11 +11,18 @@ import (
 	"strings"
 )
 
-// launchctl runs /usr/bin/launchctl with args. Tests replace it so they never load a real
-// agent. install calls launchctl("bootstrap", "gui/<uid>", plistPath) after writing the file;
-// uninstall calls launchctl("bootout", "gui/<uid>/"+Label) before removing it.
+// launchctl runs /usr/bin/launchctl with args; a failure includes its stderr. Tests replace
+// it so they never load a real agent. install bootstraps the job only when
+// "print gui/<uid>/<Label>" says it is not loaded. Nothing ever calls bootout: the tray's
+// "Start at login" toggle runs inside the launchd-started agent, and bootout would kill it.
 var launchctl = func(args ...string) error {
-	return exec.Command("/usr/bin/launchctl", args...).Run()
+	var stderr strings.Builder
+	cmd := exec.Command("/usr/bin/launchctl", args...)
+	cmd.Stderr = &stderr
+	if err := cmd.Run(); err != nil {
+		return fmt.Errorf("launchctl %s: %v: %s", args[0], err, strings.TrimSpace(stderr.String()))
+	}
+	return nil
 }
 
 func plistPath(home string) string {
@@ -35,16 +42,17 @@ func install(home, exe string) error {
 		return err
 	}
 	uid := strconv.Itoa(os.Getuid())
-	_ = launchctl("bootout", "gui/"+uid+"/"+Label)
-	if err := launchctl("bootstrap", "gui/"+uid, p); err != nil && !strings.Contains(strings.ToLower(err.Error()), "already") {
-		return err
+	if launchctl("print", "gui/"+uid+"/"+Label) == nil {
+		return nil // already loaded (e.g. we are that agent); launchd rereads the plist at login
 	}
-	return nil
+	// Starts the agent now (RunAtLoad). If one is already running it exits 0 at once, and
+	// KeepAlive{SuccessfulExit:false} does not restart it.
+	return launchctl("bootstrap", "gui/"+uid, p)
 }
 
+// uninstall removes the plist only: a running agent keeps running until logout or Quit, and
+// is not started at the next login.
 func uninstall(home string) error {
-	uid := strconv.Itoa(os.Getuid())
-	_ = launchctl("bootout", "gui/"+uid+"/"+Label)
 	if err := os.Remove(plistPath(home)); err != nil && !os.IsNotExist(err) {
 		return err
 	}

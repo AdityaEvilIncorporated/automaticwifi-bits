@@ -21,7 +21,6 @@ import (
 	"os"
 	"os/signal"
 	"runtime"
-	"strings"
 	"syscall"
 )
 
@@ -38,11 +37,12 @@ func init() {
 
 func main() {
 	args := os.Args[1:]
-	if len(args) > 0 && args[0] != "run" {
+	cmd := commandOf(args)
+	if cmd != "run" {
 		attachConsole() // Windows GUI build: print to the terminal that started us
 	}
 	ctx := context.Background()
-	if len(args) == 0 || args[0] == "run" || strings.HasPrefix(args[0], "-") {
+	if cmd == "run" {
 		// Only the agent traps Ctrl-C/SIGTERM (to log out of nothing and exit cleanly); other
 		// commands keep the default so Ctrl-C at the setup prompt exits at once.
 		var stop context.CancelFunc

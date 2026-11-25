@@ -97,8 +97,10 @@ func (a *Agent) Run(ctx context.Context) error {
 			timer = a.wait(a.step(ctx, a.drain(t)))
 		case <-a.logout:
 			a.Engine.Logout(ctx)
+			st := engine.Step{Outcome: OutcomeLoggedOut, Next: backoff.Steady}
+			timer = a.wait(st) // drop the pending keepalive timer: next check is a full steady wait
 			if a.OnStep != nil {
-				a.OnStep(engine.TriggerManual, engine.Step{Outcome: OutcomeLoggedOut, Next: backoff.Steady})
+				a.OnStep(engine.TriggerManual, st)
 			}
 		}
 		if ctx.Err() != nil {

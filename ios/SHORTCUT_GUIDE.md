@@ -64,5 +64,5 @@ Open the **Shortcuts** app, tap **+** to create a new Shortcut, and name it `Aut
 ## 5. Troubleshooting
 
 - **Redirects and Match Text:** Because `Get Contents of URL` follows redirects, a 303 redirect from `http://neverssl.com` lands on the portal's login form page, where **Match Text** reads `name="magic" value="..."`. A 200 JS page matches `fgtauth?...` directly.
-- **Different form field names:** If the portal does not accept the login, run `autowifi capture` on a laptop on campus to inspect the actual form field names, and update the `Form` fields in step 7.
+- **Different form field names:** If the portal does not accept the login, run `autowifi capture` on a laptop on campus to inspect the actual form field names, and update the `Form` fields in step 8.
 - **Session expired:** iOS has no background keepalive. Toggle Wi-Fi off and on, or run the `AutoWiFi BITS` Shortcut manually.

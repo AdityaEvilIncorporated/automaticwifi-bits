@@ -80,3 +80,12 @@
   keytool in Docker; stored only in ~/.agent-secrets (provider android-automaticwifi-bits) and, once
   allowed, GitHub Actions secrets. Cert SHA-256 A4:3B:43:C0:AC:44:A6:FA:82:F0:A4:93:A8:9F:2C:B3:33:
   8A:4C:7C:A8:06:1C:C8:61:F9:FA:96:E2:8A:F8:23. Losing it means users must uninstall to update.
+- 2026-11-25 Release second opinion round 1 "block", 8 issues, all fixed: Windows dialog now uses
+  $Host.UI.PromptForCredential (Get-Credential -Message needs -UserName on PowerShell 5.1; a failed
+  dialog is now an error, not "cancelled"); iOS guide link → blob/dev (docscheck forbids
+  blob/main); macOS autostart never boots out (it killed the launchd-started tray) and bootstraps
+  only when not loaded; Kotlin skips token-less keepalive/logout mentions like Go (new shared
+  case); versionCode uses base-10 and refuses 0 / minor,patch ≥ 100; Log out re-arms the agent
+  timer (a stale keepalive timer logged straight back in); Ctrl-C handling decided from the parsed
+  subcommand (--config before it no longer traps SIGINT); guide step number. The PowerShell script
+  could not be parse-checked (pwsh in Docker hung); real Windows stays on the manual checklist.

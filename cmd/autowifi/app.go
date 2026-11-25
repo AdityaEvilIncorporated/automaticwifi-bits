@@ -129,6 +129,21 @@ type paths struct {
 
 func (p paths) kick(name string) string { return filepath.Join(p.dir, "kick-"+name) }
 
+// commandOf returns the subcommand realMain will run for args ("run" when none is given), or ""
+// when the flags do not parse. main uses it to decide on signal handling and the console.
+func commandOf(args []string) string {
+	fs := flag.NewFlagSet("autowifi", flag.ContinueOnError)
+	fs.SetOutput(io.Discard)
+	fs.String("config", "", "")
+	if fs.Parse(args) != nil {
+		return ""
+	}
+	if fs.NArg() == 0 {
+		return "run"
+	}
+	return fs.Arg(0)
+}
+
 func realMain(args []string, e *env) int {
 	fs := flag.NewFlagSet("autowifi", flag.ContinueOnError)
 	fs.SetOutput(io.Discard)

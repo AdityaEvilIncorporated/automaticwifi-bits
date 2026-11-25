@@ -74,7 +74,10 @@ jobs:
         run: |
           v="${GITHUB_REF_NAME#v}"; v="${v%%-*}"
           IFS=. read -r major minor patch <<< "$v"
-          export APP_VERSION_CODE=$(( major * 10000 + minor * 100 + patch ))
+          # 10#: base 10 even with leading zeros; minor/patch < 100 keeps codes unique and rising
+          (( 10#$minor < 100 && 10#$patch < 100 )) || { echo "::error::minor and patch must be < 100"; exit 1; }
+          export APP_VERSION_CODE=$(( 10#$major * 10000 + 10#$minor * 100 + 10#$patch ))
+          (( APP_VERSION_CODE > 0 )) || { echo "::error::v0.0.0 gives versionCode 0"; exit 1; }
           bash scripts/build-apk.sh
 
       - name: Remove the signing key

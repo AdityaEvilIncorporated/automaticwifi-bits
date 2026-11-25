@@ -85,7 +85,9 @@ func TestDownloadPage(t *testing.T) {
 		"SHORTCUT_GUIDE", "autowifi setup", "autowifi capture",
 		"Campus verification checklist", "portal fields", "SSIDs", "certificate",
 		"https://github.com/"+repo)
-	for _, bad := range []string{"<script src=\"http", "password=", "value=\"f20"} {
+	// dev is the GitHub default branch; main is the human's empty record branch.
+	mustContain(t, page, "site/index.html", "https://github.com/"+repo+"/blob/dev/ios/SHORTCUT_GUIDE.md")
+	for _, bad := range []string{"<script src=\"http", "password=", "value=\"f20", "/blob/main/", "/tree/main/"} {
 		if strings.Contains(page, bad) {
 			t.Errorf("site/index.html must not contain %q", bad)
 		}

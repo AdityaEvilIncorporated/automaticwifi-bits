@@ -1,14 +1,125 @@
 {
   "cases": [
-    {"name": "success with keepalive and logout", "status": 200, "location": "", "body": "<html><script>window.location=\"https://fw.bits-pilani.ac.in:8090/keepalive?0102030405060708\";</script><a href=\"https://fw.bits-pilani.ac.in:8090/logout?0102030405060708\">logout</a></html>", "expect": {"outcome": "logged_in", "keepalive_url": "https://fw.bits-pilani.ac.in:8090/keepalive?0102030405060708", "logout_url": "https://fw.bits-pilani.ac.in:8090/logout?0102030405060708"}},
-    {"name": "success keepalive only derives logout", "status": 200, "location": "", "body": "<script>location.href=\"https://fw.bits-pilani.ac.in:8090/keepalive?aabbcc\"</script>", "expect": {"outcome": "logged_in", "keepalive_url": "https://fw.bits-pilani.ac.in:8090/keepalive?aabbcc", "logout_url": "https://fw.bits-pilani.ac.in:8090/logout?aabbcc"}},
-    {"name": "success via redirect", "status": 303, "location": "https://fw.bits-pilani.ac.in:8090/keepalive?ddee11", "body": "", "expect": {"outcome": "logged_in", "keepalive_url": "https://fw.bits-pilani.ac.in:8090/keepalive?ddee11", "logout_url": "https://fw.bits-pilani.ac.in:8090/logout?ddee11"}},
-    {"name": "success with escaped slashes", "status": 200, "location": "", "body": "<script>var k=\"https:\\/\\/fw.bits-pilani.ac.in:8090\\/keepalive?55ff\";</script>", "expect": {"outcome": "logged_in", "keepalive_url": "https://fw.bits-pilani.ac.in:8090/keepalive?55ff", "logout_url": "https://fw.bits-pilani.ac.in:8090/logout?55ff"}},
-    {"name": "keepalive on other host is ignored", "status": 200, "location": "", "body": "<script>window.location=\"https://evil.example:8090/keepalive?aabb\"</script>", "expect": {"outcome": "form_changed", "keepalive_url": "", "logout_url": ""}},
-    {"name": "authentication failed text", "status": 200, "location": "", "body": "<html><h2>Firewall Authentication Failed</h2><p>Please try again.</p></html>", "expect": {"outcome": "rejected", "keepalive_url": "", "logout_url": ""}},
-    {"name": "login form shown again", "status": 200, "location": "", "body": "<form action=\"/\"><input type=hidden name=magic value=11><input name=username><input type=password name=password></form>", "expect": {"outcome": "rejected", "keepalive_url": "", "logout_url": ""}},
-    {"name": "server error", "status": 500, "location": "", "body": "Internal error", "expect": {"outcome": "portal_error", "keepalive_url": "", "logout_url": ""}},
-    {"name": "bad gateway", "status": 502, "location": "", "body": "", "expect": {"outcome": "portal_error", "keepalive_url": "", "logout_url": ""}},
-    {"name": "unknown 200 page", "status": 200, "location": "", "body": "<html>Welcome to the new portal</html>", "expect": {"outcome": "form_changed", "keepalive_url": "", "logout_url": ""}}
+    {
+      "name": "success with keepalive and logout",
+      "status": 200,
+      "location": "",
+      "body": "<html><script>window.location=\"https://fw.bits-pilani.ac.in:8090/keepalive?0102030405060708\";</script><a href=\"https://fw.bits-pilani.ac.in:8090/logout?0102030405060708\">logout</a></html>",
+      "expect": {
+        "outcome": "logged_in",
+        "keepalive_url": "https://fw.bits-pilani.ac.in:8090/keepalive?0102030405060708",
+        "logout_url": "https://fw.bits-pilani.ac.in:8090/logout?0102030405060708"
+      }
+    },
+    {
+      "name": "success keepalive only derives logout",
+      "status": 200,
+      "location": "",
+      "body": "<script>location.href=\"https://fw.bits-pilani.ac.in:8090/keepalive?aabbcc\"</script>",
+      "expect": {
+        "outcome": "logged_in",
+        "keepalive_url": "https://fw.bits-pilani.ac.in:8090/keepalive?aabbcc",
+        "logout_url": "https://fw.bits-pilani.ac.in:8090/logout?aabbcc"
+      }
+    },
+    {
+      "name": "success via redirect",
+      "status": 303,
+      "location": "https://fw.bits-pilani.ac.in:8090/keepalive?ddee11",
+      "body": "",
+      "expect": {
+        "outcome": "logged_in",
+        "keepalive_url": "https://fw.bits-pilani.ac.in:8090/keepalive?ddee11",
+        "logout_url": "https://fw.bits-pilani.ac.in:8090/logout?ddee11"
+      }
+    },
+    {
+      "name": "success with escaped slashes",
+      "status": 200,
+      "location": "",
+      "body": "<script>var k=\"https:\\/\\/fw.bits-pilani.ac.in:8090\\/keepalive?55ff\";</script>",
+      "expect": {
+        "outcome": "logged_in",
+        "keepalive_url": "https://fw.bits-pilani.ac.in:8090/keepalive?55ff",
+        "logout_url": "https://fw.bits-pilani.ac.in:8090/logout?55ff"
+      }
+    },
+    {
+      "name": "keepalive on other host is ignored",
+      "status": 200,
+      "location": "",
+      "body": "<script>window.location=\"https://evil.example:8090/keepalive?aabb\"</script>",
+      "expect": {
+        "outcome": "form_changed",
+        "keepalive_url": "",
+        "logout_url": ""
+      }
+    },
+    {
+      "name": "authentication failed text",
+      "status": 200,
+      "location": "",
+      "body": "<html><h2>Firewall Authentication Failed</h2><p>Please try again.</p></html>",
+      "expect": {
+        "outcome": "rejected",
+        "keepalive_url": "",
+        "logout_url": ""
+      }
+    },
+    {
+      "name": "login form shown again",
+      "status": 200,
+      "location": "",
+      "body": "<form action=\"/\"><input type=hidden name=magic value=11><input name=username><input type=password name=password></form>",
+      "expect": {
+        "outcome": "rejected",
+        "keepalive_url": "",
+        "logout_url": ""
+      }
+    },
+    {
+      "name": "server error",
+      "status": 500,
+      "location": "",
+      "body": "Internal error",
+      "expect": {
+        "outcome": "portal_error",
+        "keepalive_url": "",
+        "logout_url": ""
+      }
+    },
+    {
+      "name": "bad gateway",
+      "status": 502,
+      "location": "",
+      "body": "",
+      "expect": {
+        "outcome": "portal_error",
+        "keepalive_url": "",
+        "logout_url": ""
+      }
+    },
+    {
+      "name": "unknown 200 page",
+      "status": 200,
+      "location": "",
+      "body": "<html>Welcome to the new portal</html>",
+      "expect": {
+        "outcome": "form_changed",
+        "keepalive_url": "",
+        "logout_url": ""
+      }
+    },
+    {
+      "name": "token-less keepalive mention before the real one",
+      "status": 200,
+      "location": "",
+      "body": "<html><script>var tpl=\"https://fw.bits-pilani.ac.in:8090/keepalive?\"+t;var lt=\"https://fw.bits-pilani.ac.in:8090/logout?\";window.location=\"https://fw.bits-pilani.ac.in:8090/keepalive?a1b2c3d4e5f60718\";</script><a href=\"https://fw.bits-pilani.ac.in:8090/logout?a1b2c3d4e5f60718\">logout</a></html>",
+      "expect": {
+        "outcome": "logged_in",
+        "keepalive_url": "https://fw.bits-pilani.ac.in:8090/keepalive?a1b2c3d4e5f60718",
+        "logout_url": "https://fw.bits-pilani.ac.in:8090/logout?a1b2c3d4e5f60718"
+      }
+    }
   ]
 }

@@ -200,3 +200,30 @@ func TestRandomJitterRange(t *testing.T) {
 		}
 	}
 }
+
+// Log out re-arms the timer: the keepalive timer armed before the logout must not fire and log
+// straight back in. Timers armed after the logout never fire here, so any later timer step
+// comes from the stale timer.
+func TestLogoutRearmsTimer(t *testing.T) {
+	s, a, r, _ := rig(t, mockportal.DefaultPassword)
+	var frozen atomic.Bool
+	a.After = func(d time.Duration) <-chan time.Time {
+		if frozen.Load() {
+			return make(chan time.Time)
+		}
+		return fast(d)
+	}
+	start(t, a)
+	eventually(t, "login", func() bool { return s.Snapshot().LoginsOK == 1 })
+	frozen.Store(true)
+	before := r.count(engine.TriggerTimer)
+	a.Logout()
+	eventually(t, "logout", func() bool { return s.Snapshot().Logouts == 1 })
+	time.Sleep(700 * time.Millisecond) // > 2 compressed keepalive intervals
+	if got := r.count(engine.TriggerTimer); got != before {
+		t.Fatalf("stale timer ran %d check(s) after logout", got-before)
+	}
+	if got := s.Snapshot().LoginsOK; got != 1 {
+		t.Fatalf("logged back in right after logout: %d logins", got)
+	}
+}

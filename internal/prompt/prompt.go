@@ -84,6 +84,29 @@ func trimOne(s string) string {
 
 // parseWindows parses the PowerShell helper's output "<user>\n<password>". Get-Credential may
 // prefix a bare user name with a backslash (empty domain); that is removed.
+// credScript (Windows) shows the standard credential dialog through
+// $Host.UI.PromptForCredential, which takes no parameter sets (Get-Credential -Message makes
+// -UserName mandatory in Windows PowerShell 5.1 and then prompts on the hidden console). The
+// result goes to stdout (a pipe to this process only) as "<user>\n<password>" in UTF-8; Cancel
+// prints nothing. No -NonInteractive: it disables the prompt. The OutputEncoding line is
+// guarded in case the hidden console handle is unusable.
+const credScript = `try { [Console]::OutputEncoding = [System.Text.Encoding]::UTF8 } catch {}
+$c = $Host.UI.PromptForCredential('AutoWiFi BITS', 'BITS campus ID and password', '', '')
+if ($c) { [Console]::Out.Write($c.UserName + "` + "`n" + `" + $c.GetNetworkCredential().Password) }`
+
+// firstLine returns the first non-empty line of s, at most 200 bytes (error context only).
+func firstLine(s string) string {
+	for _, l := range strings.Split(s, "\n") {
+		if l = strings.TrimSpace(l); l != "" {
+			if len(l) > 200 {
+				l = l[:200]
+			}
+			return l
+		}
+	}
+	return ""
+}
+
 func parseWindows(out string) (creds.Credentials, error) {
 	user, pw, ok := strings.Cut(out, "\n")
 	if !ok {

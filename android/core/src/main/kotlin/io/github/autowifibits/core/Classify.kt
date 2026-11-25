@@ -141,21 +141,38 @@ object Classify {
     private fun hasPasswordInput(cfg: PortalConfig, body: String): Boolean =
         Jsoup.parse(body).select("input[name]").any { it.attr("name") == cfg.passwordField }
 
+    /** Earliest portal URL `{base}/{path}?<token>` with a non-empty token: the Location header
+     *  first, then the body. Token-less mentions (e.g. a JS template) are skipped, as in Go. */
     private fun findPortalToken(cfg: PortalConfig, location: String?, body: String, path: String): String {
         if (!location.isNullOrEmpty()) {
-            val locIdx = findPortalUrlQueryStart(cfg, location, path)
-            if (locIdx >= 0) {
-                val tok = readAlnumToken(location, locIdx)
-                if (tok.isNotEmpty()) return tok
-            }
+            val tok = firstToken(cfg, location, path)
+            if (tok.isNotEmpty()) return tok
         }
-        val bodyIdx = findPortalUrlQueryStart(cfg, body, path)
-        if (bodyIdx >= 0) {
-            return readAlnumToken(body, bodyIdx)
-        }
-        return ""
+        return firstToken(cfg, body, path)
     }
 
+    private fun firstToken(cfg: PortalConfig, text: String, path: String): String {
+        val host = cfg.portalHost.lowercase()
+        val port = cfg.portalPort
+        var bestIdx = -1
+        var best = ""
+        for (needle in listOf("https://$host:$port/$path?", "https:\\/\\/$host:$port\\/$path?")) {
+            var from = 0
+            while (true) {
+                val idx = text.indexOf(needle, from, ignoreCase = true)
+                if (idx < 0) break
+                val tok = readAlnumToken(text, idx + needle.length)
+                if (tok.isNotEmpty()) {
+                    if (bestIdx < 0 || idx < bestIdx) { bestIdx = idx; best = tok }
+                    break
+                }
+                from = idx + needle.length
+            }
+        }
+        return best
+    }
+
+    /** Index just after the first `{base}/{path}?` (plain or JSON-escaped), or -1 (probe only). */
     private fun findPortalUrlQueryStart(cfg: PortalConfig, text: String, path: String): Int {
         val host = cfg.portalHost.lowercase()
         val port = cfg.portalPort
