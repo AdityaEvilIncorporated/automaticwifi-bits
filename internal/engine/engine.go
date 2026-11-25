@@ -7,6 +7,7 @@ import (
 	"context"
 	"time"
 
+	"autowifi/internal/backoff"
 	"autowifi/internal/creds"
 	"autowifi/internal/notify"
 	"autowifi/internal/portal"
@@ -82,11 +83,115 @@ type Engine struct {
 // Otherwise nothing. Notifications never happen on LoggedIn, Online, OffCampus, Foreign or
 // keepalive success.
 func (e *Engine) Run(ctx context.Context, t Trigger) Step {
-	panic("not implemented")
+	var step Step
+
+	switch {
+	case t == TriggerCredsUpdated:
+		e.State.CredentialsRejected = false
+		e.State.ConsecutiveFailures = 0
+	case e.State.CredentialsRejected && t != TriggerManual:
+		step = Step{Outcome: OutcomePaused, Next: backoff.Steady}
+		e.logf("check %s: %s", t, step.Outcome)
+		e.save()
+		return step
+	case e.State.LoggedIn() && t == TriggerTimer:
+		if e.Portal.Keepalive(ctx, e.State.KeepaliveURL) {
+			e.State.ConsecutiveFailures = 0
+			step = Step{Outcome: OutcomeKeepaliveOK, Next: backoff.Steady}
+			e.logf("check %s: %s", t, step.Outcome)
+			e.save()
+			return step
+		}
+		e.State.ClearSession()
+	}
+
+	r := e.Portal.CheckOnce(ctx, e.Creds.Get)
+	step.Outcome = r.Outcome
+
+	switch r.Outcome {
+	case portal.OffCampus:
+		e.State.ClearSession()
+		e.State.ConsecutiveFailures = 0
+		step.Next = backoff.Steady
+	case portal.Online, portal.Foreign:
+		e.State.ConsecutiveFailures = 0
+		step.Next = backoff.Steady
+	case portal.LoggedIn:
+		e.State.MagicToken = r.Magic
+		e.State.KeepaliveURL = r.KeepaliveURL
+		e.State.LogoutURL = r.LogoutURL
+		e.State.ConsecutiveFailures = 0
+		e.State.CredentialsRejected = false
+		step.Next = backoff.Steady
+	case portal.Rejected:
+		e.State.CredentialsRejected = true
+		e.State.ClearSession()
+		e.State.ConsecutiveFailures = 0
+		step.Notified = e.notify(notify.ReasonRejected)
+		step.Next = backoff.Steady
+	case portal.NoCredentials:
+		e.State.ConsecutiveFailures = 0
+		step.Notified = e.notify(notify.ReasonNoCredentials)
+		step.Next = backoff.Steady
+	case portal.FormChanged:
+		e.State.ConsecutiveFailures++
+		step.Notified = e.notify(notify.ReasonFormChanged)
+		step.Next = backoff.Delay(e.State.ConsecutiveFailures)
+	case portal.PortalError:
+		e.State.ConsecutiveFailures++
+		if e.State.ConsecutiveFailures >= 3 {
+			step.Notified = e.notify(notify.ReasonRepeatedErrors)
+		}
+		step.Next = backoff.Delay(e.State.ConsecutiveFailures)
+	default:
+		step.Next = backoff.Steady
+	}
+
+	if r.Outcome == portal.PortalError && r.Err != nil {
+		e.logf("check %s: %s (%v)", t, step.Outcome, r.Err)
+	} else {
+		e.logf("check %s: %s", t, step.Outcome)
+	}
+	e.save()
+	return step
 }
 
 // Logout ends the session: when State.LoggedIn(), Portal.Logout(LogoutURL) (error only
 // logged), then ClearSession and Save. Not logged in: nothing but Save.
 func (e *Engine) Logout(ctx context.Context) {
-	panic("not implemented")
+	if e.State.LoggedIn() {
+		if err := e.Portal.Logout(ctx, e.State.LogoutURL); err != nil {
+			e.logf("logout: %v", err)
+		}
+		e.State.ClearSession()
+	}
+	e.save()
+}
+
+func (e *Engine) notify(r notify.Reason) notify.Reason {
+	now := e.Now()
+	if !notify.Allow(e.State.LastNotificationAt, now) {
+		return ""
+	}
+	title, body := notify.Message(r)
+	if err := e.Notifier.Notify(title, body); err != nil {
+		e.logf("notify %s: %v", r, err)
+	}
+	e.State.LastNotificationAt = now
+	return r
+}
+
+func (e *Engine) save() {
+	if e.Save == nil {
+		return
+	}
+	if err := e.Save(e.State); err != nil {
+		e.logf("save state: %v", err)
+	}
+}
+
+func (e *Engine) logf(format string, args ...any) {
+	if e.Log != nil {
+		e.Log(format, args...)
+	}
 }
