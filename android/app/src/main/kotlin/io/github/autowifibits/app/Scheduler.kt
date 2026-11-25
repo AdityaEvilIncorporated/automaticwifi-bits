@@ -10,6 +10,7 @@ import androidx.work.Data
 import androidx.work.ExistingPeriodicWorkPolicy
 import androidx.work.ExistingWorkPolicy
 import androidx.work.OneTimeWorkRequestBuilder
+import androidx.work.Operation
 import androidx.work.PeriodicWorkRequestBuilder
 import androidx.work.WorkManager
 import io.github.autowifibits.core.Step
@@ -42,10 +43,9 @@ object Scheduler {
      * trigger has its own unique work, so a Wi-Fi join can never cancel a pending
      * CREDS_UPDATED run (which is what clears the rejected flag).
      */
-    fun now(context: Context, trigger: Trigger) {
+    fun now(context: Context, trigger: Trigger): Operation =
         WorkManager.getInstance(context.applicationContext).enqueueUniqueWork("$NOW-${trigger.name}", ExistingWorkPolicy.REPLACE,
             OneTimeWorkRequestBuilder<CheckWorker>().setInputData(CheckWorker.input(trigger)).build())
-    }
 
     fun cancelNext(context: Context) {
         WorkManager.getInstance(context.applicationContext).cancelUniqueWork(NEXT)
@@ -55,9 +55,9 @@ object Scheduler {
      * After a check: keepalive in 5 min when logged in, retries at 5 s / 15 s / 60 s / 5 min after
      * errors. WorkManager may delay these under Doze; the periodic work is the safety net.
      */
-    fun afterStep(context: Context, step: Step) {
+    fun afterStep(context: Context, step: Step, loggedIn: Boolean) {
         val wm = WorkManager.getInstance(context.applicationContext)
-        val delay = Logic.nextDelayMs(step)
+        val delay = Logic.nextDelayMs(step, loggedIn)
         if (delay == null) {
             wm.cancelUniqueWork(NEXT) // periodic work only
         } else {

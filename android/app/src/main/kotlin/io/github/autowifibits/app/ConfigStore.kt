@@ -16,8 +16,6 @@ class ConfigStore(context: Context) {
     var pin: String
         get() = p.getString("pinned_cert_sha256", "")?.takeIf { pinRe.matches(it) } ?: ""
         set(v) {
-            val clean = v.trim().lowercase()
-            require(clean.isEmpty() || pinRe.matches(clean)) { "The pin must be 64 hex characters." }
-            p.edit().putString("pinned_cert_sha256", clean).apply()
+            p.edit().putString("pinned_cert_sha256", Logic.normalizePin(v)).apply()
         }
 }

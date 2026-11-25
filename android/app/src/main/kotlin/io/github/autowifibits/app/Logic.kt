@@ -8,10 +8,24 @@ import io.github.autowifibits.core.Step
 
 /** Pure decisions used by the Android glue, kept here so they are unit-tested on the JVM. */
 object Logic {
-    /** Delay before the next one-time check after [step], or null for "periodic work only". */
-    fun nextDelayMs(step: Step): Long? = when (step.outcome) {
-        "logged_in", "keepalive_ok", "portal_error", "form_changed" -> step.nextMs
-        else -> null // online, off campus, paused, rejected, no credentials, foreign
+    /**
+     * Delay before the next one-time check after [step], or null for "periodic work only".
+     * [loggedIn] is the session state after the step: while a session is held (e.g. a Wi-Fi
+     * roam or "Log in now" found the network online) the 5-minute keepalive must stay scheduled.
+     */
+    fun nextDelayMs(step: Step, loggedIn: Boolean): Long? = when {
+        step.outcome in setOf("logged_in", "keepalive_ok", "portal_error", "form_changed") -> step.nextMs
+        loggedIn && step.outcome != "paused" -> step.nextMs
+        else -> null // online without a session, off campus, paused, rejected, no credentials, foreign
+    }
+
+    private val pinRe = Regex("^[0-9a-f]{64}$")
+
+    /** Normalises a pasted pin (trim, lower-case); "" clears it. Throws for anything else. */
+    fun normalizePin(v: String): String {
+        val clean = v.trim().lowercase()
+        require(clean.isEmpty() || pinRe.matches(clean)) { "The pin must be 64 hex characters." }
+        return clean
     }
 
     /** Status line wording for the screen. */

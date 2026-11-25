@@ -3,6 +3,8 @@ package io.github.autowifibits.app
 import android.app.Notification
 import android.app.NotificationChannel
 import android.app.NotificationManager
+import android.app.PendingIntent
+import android.content.Intent
 import android.content.Context
 import android.net.ConnectivityManager
 import android.net.Network
@@ -50,10 +52,10 @@ object Checker {
             override fun now() = System.currentTimeMillis()
             override fun save(state: SessionState) = states.save(state)
         }
-        val step: Step
+        val engine: Engine
         if (net == null) {
             // No Wi-Fi: every check is off campus, but through the Engine so its rules still apply.
-            step = Engine(NoWifiPortal, ports, states.load()).run(trigger)
+            engine = Engine(NoWifiPortal, ports, states.load())
         } else {
             val cfg = ConfigStore(app).load()
             val portal = PortalClient(
@@ -65,10 +67,11 @@ object Checker {
                     try { net.getAllByName(host).isNotEmpty() } catch (_: UnknownHostException) { false }
                 },
             )
-            step = Engine(portal, ports, states.load()).run(trigger)
+            engine = Engine(portal, ports, states.load())
         }
+        val step = engine.run(trigger)
         states.lastOutcome = step.outcome
-        Scheduler.afterStep(app, step)
+        Scheduler.afterStep(app, step, engine.state.loggedIn)
         step
     }
 
@@ -103,6 +106,8 @@ object Checker {
             .setContentText(body)
             .setStyle(Notification.BigTextStyle().bigText(body))
             .setAutoCancel(true)
+            .setContentIntent(PendingIntent.getActivity(context, 0, Intent(context, MainActivity::class.java),
+                PendingIntent.FLAG_IMMUTABLE or PendingIntent.FLAG_UPDATE_CURRENT))
             .build()
         // Throws SecurityException without POST_NOTIFICATIONS on 13+; the Engine catches it.
         context.getSystemService(NotificationManager::class.java).notify(1, n)

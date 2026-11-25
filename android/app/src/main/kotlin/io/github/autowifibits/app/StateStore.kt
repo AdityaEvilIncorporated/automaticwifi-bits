@@ -1,9 +1,15 @@
 package io.github.autowifibits.app
 
+import android.annotation.SuppressLint
 import android.content.Context
 import io.github.autowifibits.core.SessionState
 
-/** SessionState in app-private SharedPreferences (the keepalive URL carries a session token). */
+/**
+ * SessionState in app-private SharedPreferences (the keepalive URL carries a session token).
+ * Writes use commit(): they run on the worker thread, and the process may be frozen as soon as
+ * doWork returns, so an asynchronous apply() could lose them.
+ */
+@SuppressLint("ApplySharedPref")
 class StateStore(context: Context) {
     private val p = context.getSharedPreferences("state", Context.MODE_PRIVATE)
 
@@ -24,10 +30,10 @@ class StateStore(context: Context) {
             .putInt("consecutive_failures", s.consecutiveFailures)
             .putLong("last_notification_at", s.lastNotificationAtMs)
             .putBoolean("credentials_rejected", s.credentialsRejected)
-            .apply()
+            .commit() // synchronous: the worker process may be frozen right after doWork returns
     }
 
     var lastOutcome: String
         get() = p.getString("last_outcome", "") ?: ""
-        set(v) { p.edit().putString("last_outcome", v).putLong("last_outcome_at", System.currentTimeMillis()).apply() }
+        set(v) { p.edit().putString("last_outcome", v).putLong("last_outcome_at", System.currentTimeMillis()).commit() }
 }

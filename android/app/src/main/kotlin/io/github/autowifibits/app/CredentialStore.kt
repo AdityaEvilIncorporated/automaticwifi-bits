@@ -45,6 +45,7 @@ class CredentialStore(context: Context) {
                 .setBlockModes(KeyProperties.BLOCK_MODE_GCM)
                 .setEncryptionPaddings(KeyProperties.ENCRYPTION_PADDING_NONE)
                 .setKeySize(256)
+                .setRandomizedEncryptionRequired(true) // the default; explicit because IV safety relies on it
                 .build(),
         )
         return gen.generateKey()
@@ -55,7 +56,10 @@ class CredentialStore(context: Context) {
         val iv = prefs.getString("iv", null) ?: return null
         return try {
             val c = Cipher.getInstance(TRANSFORM)
-            c.init(Cipher.DECRYPT_MODE, key(), GCMParameterSpec(128, Base64.decode(iv, Base64.NO_WRAP)))
+            // Decrypt with the IV stored next to this ciphertext. IVs are never reused: encryption
+            // (write) never passes an IV, and the Keystore key requires randomized encryption, so
+            // the Keystore picks a fresh random IV every time.
+            c.init(Cipher.DECRYPT_MODE, key(), GCMParameterSpec(128, Base64.decode(iv, Base64.NO_WRAP))) // nosemgrep
             CredentialCodec.decode(c.doFinal(Base64.decode(ct, Base64.NO_WRAP)))
         } catch (e: Exception) {
             null // key lost (e.g. restored device) or tampered: ask again
@@ -67,7 +71,8 @@ class CredentialStore(context: Context) {
         val plain = CredentialCodec.encode(cr)
         try {
             write(plain)
-        } catch (e: java.security.GeneralSecurityException) {
+        } catch (e: Exception) {
+            if (e !is java.security.GeneralSecurityException && e !is java.security.ProviderException) throw e
             // Invalidated or corrupt Keystore entry: start over with a fresh key.
             KeyStore.getInstance("AndroidKeyStore").apply { load(null) }.deleteEntry(ALIAS)
             write(plain)

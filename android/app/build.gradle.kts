@@ -13,7 +13,7 @@ android {
         applicationId = "io.github.autowifibits.app"
         minSdk = 26
         targetSdk = 35
-        versionCode = env("APP_VERSION_CODE")?.toIntOrNull() ?: 1
+        versionCode = env("APP_VERSION_CODE")?.let { it.toIntOrNull() ?: error("APP_VERSION_CODE must be an integer, got '$it'") } ?: 1
         versionName = env("APP_VERSION_NAME") ?: "dev"
     }
     // Release signing comes from the environment (CI secrets); never from files in the repo.

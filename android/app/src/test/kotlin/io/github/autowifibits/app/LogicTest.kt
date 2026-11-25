@@ -15,12 +15,24 @@ import kotlin.test.assertTrue
 
 class LogicTest {
     @Test fun nextDelay() {
-        assertEquals(300_000L, Logic.nextDelayMs(Step("logged_in", 300_000L)))
-        assertEquals(300_000L, Logic.nextDelayMs(Step("keepalive_ok", 300_000L)))
-        assertEquals(5_000L, Logic.nextDelayMs(Step("portal_error", 5_000L)))
-        assertEquals(15_000L, Logic.nextDelayMs(Step("form_changed", 15_000L)))
+        assertEquals(300_000L, Logic.nextDelayMs(Step("logged_in", 300_000L), loggedIn = true))
+        assertEquals(300_000L, Logic.nextDelayMs(Step("keepalive_ok", 300_000L), loggedIn = true))
+        assertEquals(5_000L, Logic.nextDelayMs(Step("portal_error", 5_000L), loggedIn = false))
+        assertEquals(15_000L, Logic.nextDelayMs(Step("form_changed", 15_000L), loggedIn = false))
         for (o in listOf("online", "off_campus", "foreign", "paused", "rejected", "no_credentials")) {
-            assertNull(Logic.nextDelayMs(Step(o, Backoff.STEADY_MS)), o)
+            assertNull(Logic.nextDelayMs(Step(o, Backoff.STEADY_MS), loggedIn = false), o)
+        }
+        // a Wi-Fi roam / "Log in now" that finds the network online keeps the keepalive going
+        assertEquals(Backoff.STEADY_MS, Logic.nextDelayMs(Step("online", Backoff.STEADY_MS), loggedIn = true))
+        assertNull(Logic.nextDelayMs(Step("paused", Backoff.STEADY_MS), loggedIn = true))
+    }
+
+    @Test fun pinNormalisation() {
+        val pin = "ab".repeat(32)
+        assertEquals(pin, Logic.normalizePin("  " + pin.uppercase() + "\n"))
+        assertEquals("", Logic.normalizePin("   "))
+        for (bad in listOf("abc", "g".repeat(64), "ab:".repeat(21) + "a")) {
+            kotlin.test.assertFailsWith<IllegalArgumentException>(bad) { Logic.normalizePin(bad) }
         }
     }
 
