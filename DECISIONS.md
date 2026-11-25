@@ -18,3 +18,12 @@
   (FortiGate magics are hex; anything else means the portal changed). Added to PROTOCOL + probe.json.
 - 2026-11-25 Windows notifications are shown under PowerShell's AppUserModelID instead of registering
   our own (registration needs a Start-menu shortcut; not worth it for quiet error notices).
+- 2026-11-25 T07 tlsconf: InsecureSkipVerify + VerifyConnection (fail-closed, runs on resumed sessions)
+  is the only way crypto/tls allows "trust store, else host-bound pin". Host binding: SNI must equal
+  portal_host; an empty SNI is accepted only when portal_host is an IP literal (Go sends no SNI for
+  IPs; only the mock uses an IP). Pin compared in constant time. Semgrep rule silenced on 2 lines.
+- 2026-11-25 T07 second opinion NOT run: second-opinion.sh only diffs dev...task/<ID> and T07 was
+  committed on dev (17d553a); the scratch-clone workaround was denied. Run it on a task branch next
+  time; `second-opinion.sh release` before deploy covers this code.
+- 2026-11-25 L1 "concerns" on T05 (needle case) and T09 (notify on error) were false positives:
+  PortalBase() lowercases the host; the contract requires counting a failed Notify as sent.

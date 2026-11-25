@@ -162,8 +162,8 @@
       "size": 2,
       "depends": [],
       "acceptance": "go test ./internal/tlsconf/ -count=1",
-      "status": "todo",
-      "owner": null,
+      "status": "done",
+      "owner": "supervisor",
       "attempts": 0,
       "rung": 0,
       "files": [

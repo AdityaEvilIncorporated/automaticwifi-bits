@@ -6,7 +6,7 @@ T30: rejected once, resubmission good but merge conflicted (REVIEW_L1.md on both
 merge script dropped the branch; recovered commit dcc95c8, took it, added the Get Group step, done.
 A redundant re-run of T30 (branch task/T30, based on stale dev, lacks the Get Group action) was NOT
 merged; dev keeps the reviewed guide. The branch can be deleted.
-Round 2 merged: T10W, T22.
+Round 2 merged: T10W, T22. Round 3 merged: T05, T09. T07 (tlsconf) done by me: 17d553a.
 
 ## Done
 - intake read; PLAN.md, ARCHITECTURE.md, SCHEDULE.md, DECISIONS.md written.
@@ -18,8 +18,8 @@ Round 2 merged: T10W, T22.
 - TASKS.json (22 tasks) and tasks/<ID>/BRIEF.md for every EASY/MEDIUM task.
 
 ## Half-done
-- T05, T09 requeued (todo, attempts 0): both passed acceptance twice but the gate failed on stale-
-  worktree regressions (PRB-001); their code was never committed, so they restart from dev.
+- T07 second opinion pending (see DECISIONS.md); do it via a task branch or at release.
+- T06 brief updated: unwrap *url.Error (URLs carry magic/tokens); new TestErrorsNeverContainMagicOrToken.
 
 ## Supervisor fixes after review (commit "review fixes")
 - creds file store: corrupt JSON -> ErrNotFound, never the json error (it can quote file bytes). Test added.
@@ -32,8 +32,8 @@ Round 2 merged: T10W, T22.
 See DECISIONS.md.
 
 ## Next 3 steps
-1. T07 (tlsconf) myself, then second-opinion.sh task T07 (unblocks T06, T13).
-2. bs-task.py queue: review T30 resubmission and T05/T09/T10W/T22 as they arrive.
+1. bs-task.py queue: review T06, then T13 (both unblocked by T07).
+2. Start T14 (agent/CLI/tray) in parallel; it needs T06/T13 merged before its e2e test.
 3. T14 agent/CLI/tray once T06, T09, T13 are merged. In T14: open update URLs only if they start with https://github.com/.
 
 ## Known problems
