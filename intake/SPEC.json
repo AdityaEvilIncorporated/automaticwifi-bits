@@ -1,0 +1,166 @@
+{
+  "name": "AutoWiFi BITS",
+  "one_line": "Automatically and silently logs BITS Pilani students into the campus FortiGate Wi-Fi captive portal in the background when joining campus Wi-Fi or when sessions expire.",
+  "users": [
+    "BITS Pilani students using their own campus ID and password"
+  ],
+  "features": [
+    {
+      "name": "Captive portal detection and FortiGate login",
+      "detail": "Check http://neverssl.com (fallback http://connectivitycheck.gstatic.com/generate_204); if redirected or served a 200 page containing https://fw.bits-pilani.ac.in:8090/fgtauth?<magic>, POST configurable form fields (default username, password, magic, 4Tredir). Do nothing if already logged in or if fw.bits-pilani.ac.in does not resolve.",
+      "priority": "must"
+    },
+    {
+      "name": "Keepalive and session refresh",
+      "detail": "Extract the keepalive URL (https://fw.bits-pilani.ac.in:8090/keepalive?<token>) after successful login and call it every 5 minutes; trigger a fresh login if keepalive fails.",
+      "priority": "must"
+    },
+    {
+      "name": "Retry backoff and quiet failure notifications",
+      "detail": "Retry failed checks or logins at 5s, 15s, 60s, then every 5 minutes while the portal is showing. Send at most one quiet notification per hour (never on success) when credentials are rejected (stop retrying until updated), after 3 consecutive non-credential login failures, or if the portal form changes.",
+      "priority": "must"
+    },
+    {
+      "name": "Secure OS credential storage",
+      "detail": "Store campus ID and password only in macOS Keychain, Windows Credential Manager, Android Keystore, or Linux Secret Service (via go-keyring, with ~/.config/autowifi-bits/credentials mode 600 fallback and one-time warning). Never store credentials in code, logs, repo, or download page.",
+      "priority": "must"
+    },
+    {
+      "name": "macOS background agent",
+      "detail": "Single Go binary for macOS 12+ running in the background with no windows, optional menu-bar icon, and start-at-login support.",
+      "priority": "must"
+    },
+    {
+      "name": "Windows background app",
+      "detail": "Single Go binary for Windows 10+ with system tray icon and start-at-login support.",
+      "priority": "must"
+    },
+    {
+      "name": "Android background app",
+      "detail": "Kotlin app for Android 8.0+ (API 26+) triggering checks on Wi-Fi connect via ConnectivityManager.NetworkCallback plus a 15-minute WorkManager periodic check, with a one-time battery-optimization exemption request.",
+      "priority": "must"
+    },
+    {
+      "name": "iOS Apple Shortcuts automation and guide",
+      "detail": "Apple Shortcuts automation triggered when joining BITS Wi-Fi SSIDs with on-device Text actions for credentials and setup instructions advising iCloud Advanced Data Protection.",
+      "priority": "must"
+    },
+    {
+      "name": "TLS verification and host-only pinning",
+      "detail": "Verify the *.bits-pilani.ac.in certificate on port 8090 against the standard OS trust store first, falling back to pinning fw.bits-pilani.ac.in only if verification fails on an OS; never disable TLS verification globally.",
+      "priority": "must"
+    },
+    {
+      "name": "Shared protocol spec, JSON test cases, and local mock portal",
+      "detail": "One written protocol spec and shared JSON test cases executed by both Go and Kotlin implementations against a local mock FortiGate portal issuing per-visit magic tokens, keepalive, and logout URLs.",
+      "priority": "must"
+    },
+    {
+      "name": "Capture diagnostic command",
+      "detail": "Diagnostic command that prints the captive portal form action URL and input field names (never values) when the portal is showing, with configurable field names.",
+      "priority": "must"
+    },
+    {
+      "name": "GitHub Releases and static download page",
+      "detail": "Distribute binaries and APK via GitHub Releases and a static GitHub Pages download site documenting Gatekeeper, SmartScreen, and Android sideload steps.",
+      "priority": "must"
+    },
+    {
+      "name": "Linux desktop support",
+      "detail": "Go single binary for Ubuntu 22.04+ with tray icon, start at login, and Secret Service or mode-600 file credential storage.",
+      "priority": "should"
+    },
+    {
+      "name": "Manual login trigger",
+      "detail": "Provide a Log in now button or menu action to trigger an immediate portal check and login.",
+      "priority": "should"
+    },
+    {
+      "name": "Auto-update check",
+      "detail": "Periodically check GitHub Releases for newer versions.",
+      "priority": "should"
+    },
+    {
+      "name": "Code signing and notarization",
+      "detail": "Sign Windows binaries and sign/notarize macOS binaries in a future release.",
+      "priority": "later"
+    }
+  ],
+  "user_flows": [
+    "Onboarding: Student downloads the installer/APK or Apple Shortcut from the static GitHub Pages site, follows OS trust prompts (Gatekeeper/SmartScreen/Android install permission), and saves their campus ID and password into the OS secure store (or Shortcut Text actions on iOS).",
+    "Automatic background login: Device connects to campus Wi-Fi or an existing session expires; the app checks neverssl.com (or gstatic generate_204), detects redirect to fw.bits-pilani.ac.in:8090/fgtauth?<magic>, submits the login POST, and stores the returned keepalive URL silently without notifying.",
+    "Already logged in or off-campus: Check returns normal 200/204 without fgtauth, or fw.bits-pilani.ac.in fails DNS resolution; the app does nothing.",
+    "Session keepalive: Every 5 minutes after login, the app requests the keepalive URL; if keepalive fails, it triggers a fresh captive portal check and login.",
+    "Failure and backoff: On wrong credentials, the app sends one quiet notification and pauses retries until the user updates credentials; on network or portal errors, it retries at 5s, 15s, 60s, and 5m intervals, notifying quietly once per hour after 3 consecutive failures or unexpected portal form changes.",
+    "Campus diagnostic capture: Student runs the capture command while the portal is visible to print the form action URL and field names for confirmation."
+  ],
+  "data_entities": [
+    {
+      "name": "CampusCredentials",
+      "fields": [
+        "username",
+        "password"
+      ]
+    },
+    {
+      "name": "PortalConfig",
+      "fields": [
+        "check_urls",
+        "portal_host",
+        "login_url",
+        "username_field",
+        "password_field",
+        "magic_field",
+        "redirect_field",
+        "keepalive_interval_seconds",
+        "pinned_cert_fingerprint",
+        "known_ssids"
+      ]
+    },
+    {
+      "name": "SessionState",
+      "fields": [
+        "magic_token",
+        "keepalive_url",
+        "logout_url",
+        "consecutive_failures",
+        "backoff_step",
+        "last_notification_at",
+        "credentials_invalid"
+      ]
+    }
+  ],
+  "integrations": [
+    "BITS Pilani FortiGate Captive Portal (https://fw.bits-pilani.ac.in:8090)",
+    "Connectivity check endpoints (http://neverssl.com, http://connectivitycheck.gstatic.com/generate_204)",
+    "macOS Keychain, Windows Credential Manager, Linux Secret Service API, Android Keystore",
+    "Android ConnectivityManager.NetworkCallback and WorkManager",
+    "Apple Shortcuts (iOS Wi-Fi automation)",
+    "GitHub Releases and GitHub Pages"
+  ],
+  "stack": {
+    "language": "Go (macOS 12+, Windows 10+, Ubuntu 22.04+), Kotlin (Android 8.0+ / API 26+), Apple Shortcuts (iOS)",
+    "framework": "Go single cross-compiled desktop binary with system tray and auto-start; Native Android SDK",
+    "database": "None (OS secure credential stores only; mode-600 file fallback on Linux)",
+    "packages": [
+      "go-keyring",
+      "WorkManager",
+      "ConnectivityManager.NetworkCallback"
+    ]
+  },
+  "non_goals": [
+    "Any backend server, database, user accounts, or hosted web app",
+    "Disabling TLS certificate verification globally",
+    "Storing credentials in source code, logs, repository, or download page",
+    "Building a background login app for iOS",
+    "Depending on Wi-Fi SSID detection on desktop or Android",
+    "Using Rust with UniFFI",
+    "Code signing and notarization in the first release"
+  ],
+  "open_questions": [
+    "What are the exact BITS Pilani Wi-Fi SSID names from iPhone Wi-Fi settings needed for the Apple Shortcuts automation trigger?",
+    "What are the exact FortiGate portal form action URL, input field names, and keepalive/logout URL formats captured on campus Wi-Fi?",
+    "Does the fw.bits-pilani.ac.in:8090 TLS certificate validate against standard OS trust stores on macOS, Windows, Ubuntu, and Android, or is a pinned host certificate needed?",
+    "What exact 4Tredir value does the campus portal expect, and what exact HTTP status or response body text distinguishes rejected credentials from transient portal errors?"
+  ]
+}
