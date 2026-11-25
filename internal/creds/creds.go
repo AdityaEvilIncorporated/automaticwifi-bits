@@ -3,7 +3,12 @@
 // fallback on Linux when no Secret Service is running.
 package creds
 
-import "errors"
+import (
+	"errors"
+	"fmt"
+	"strings"
+	"sync"
+)
 
 // ErrNotFound is returned (possibly wrapped) by Get when nothing is stored.
 var ErrNotFound = errors.New("credentials not found")
@@ -28,12 +33,15 @@ type Credentials struct {
 // String returns "Credentials{Username: <username>, Password: [redacted]}"; when the password
 // is empty it is "Credentials{Username: <username>, Password: []}".
 func (c Credentials) String() string {
-	panic("not implemented")
+	if c.Password == "" {
+		return fmt.Sprintf("Credentials{Username: %s, Password: []}", c.Username)
+	}
+	return fmt.Sprintf("Credentials{Username: %s, Password: [redacted]}", c.Username)
 }
 
 // GoString returns the same as String (so %#v is redacted too).
 func (c Credentials) GoString() string {
-	panic("not implemented")
+	return c.String()
 }
 
 // Store is a credential store.
@@ -49,5 +57,45 @@ type Store interface {
 // NewMemory returns an in-memory Store (tests and the "no secure store" error path).
 // Same validation as every Store. Safe for concurrent use.
 func NewMemory() Store {
-	panic("not implemented")
+	return &memoryStore{}
+}
+
+func validateAndNormalize(c Credentials) (Credentials, error) {
+	u := strings.TrimSpace(c.Username)
+	if u == "" || c.Password == "" {
+		return Credentials{}, ErrEmpty
+	}
+	return Credentials{Username: u, Password: c.Password}, nil
+}
+
+type memoryStore struct {
+	mu    sync.Mutex
+	creds *Credentials
+}
+
+func (m *memoryStore) Get() (Credentials, error) {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	if m.creds == nil {
+		return Credentials{}, ErrNotFound
+	}
+	return *m.creds, nil
+}
+
+func (m *memoryStore) Set(c Credentials) error {
+	norm, err := validateAndNormalize(c)
+	if err != nil {
+		return err
+	}
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.creds = &norm
+	return nil
+}
+
+func (m *memoryStore) Delete() error {
+	m.mu.Lock()
+	defer m.mu.Unlock()
+	m.creds = nil
+	return nil
 }
