@@ -41,10 +41,34 @@ func attachConsole() {
 	if r == 0 {
 		return
 	}
-	if out, err := os.OpenFile("CONOUT$", os.O_WRONLY, 0); err == nil {
-		os.Stdout, os.Stderr = out, out
+	// Only replace streams that have no usable handle: a redirected stdout (autowifi capture >
+	// report.txt) or a pipe must be kept.
+	if !usable(os.Stdout) || !usable(os.Stderr) {
+		if out, err := os.OpenFile("CONOUT$", os.O_WRONLY, 0); err == nil {
+			if !usable(os.Stdout) {
+				os.Stdout = out
+			}
+			if !usable(os.Stderr) {
+				os.Stderr = out
+			}
+		}
 	}
-	if in, err := os.OpenFile("CONIN$", os.O_RDWR, 0); err == nil {
-		os.Stdin = in
+	if !usable(os.Stdin) {
+		if in, err := os.OpenFile("CONIN$", os.O_RDWR, 0); err == nil {
+			os.Stdin = in
+		}
 	}
+}
+
+// usable reports whether f wraps a real file, pipe or console handle.
+func usable(f *os.File) bool {
+	if f == nil {
+		return false
+	}
+	h := windows.Handle(f.Fd())
+	if h == 0 || h == windows.InvalidHandle {
+		return false
+	}
+	t, err := windows.GetFileType(h)
+	return err == nil && t != windows.FILE_TYPE_UNKNOWN
 }

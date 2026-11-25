@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"sync"
 	"time"
 
 	"autowifi/internal/agent"
@@ -77,16 +78,35 @@ func osEnv(ctx context.Context) (*env, error) {
 		kickInterval: 2 * time.Second, trayAvailable: true, updateInterval: 24 * time.Hour,
 	}
 	if runtime.GOOS == "linux" {
+		// The Secret Service probe (and the fallback warning) only happens when a command
+		// actually touches credentials, not for version/help/capture/autostart.
 		fb := filepath.Join(dir, "credentials")
-		e.store = creds.NewDefault(creds.KeyringProbe, fb, func(msg string) {
-			fmt.Fprintln(os.Stderr, "autowifi:", msg)
-			_ = e.notifier.Notify("AutoWiFi BITS", msg)
-		})
+		e.store = &lazyStore{make: func() creds.Store {
+			return creds.NewDefault(creds.KeyringProbe, fb, func(msg string) {
+				fmt.Fprintln(os.Stderr, "autowifi:", msg)
+				_ = e.notifier.Notify("AutoWiFi BITS", msg)
+			})
+		}}
+		// fyne.io/systray needs a D-Bus session and a display; without them run headless.
+		e.trayAvailable = os.Getenv("DBUS_SESSION_BUS_ADDRESS") != "" &&
+			(os.Getenv("DISPLAY") != "" || os.Getenv("WAYLAND_DISPLAY") != "")
 	} else {
 		e.store = creds.NewKeyring()
 	}
 	return e, nil
 }
+
+// lazyStore builds the real store on first use.
+type lazyStore struct {
+	once sync.Once
+	make func() creds.Store
+	s    creds.Store
+}
+
+func (l *lazyStore) get() creds.Store                { l.once.Do(func() { l.s = l.make() }); return l.s }
+func (l *lazyStore) Get() (creds.Credentials, error) { return l.get().Get() }
+func (l *lazyStore) Set(c creds.Credentials) error   { return l.get().Set(c) }
+func (l *lazyStore) Delete() error                   { return l.get().Delete() }
 
 const usage = `usage: autowifi [--config <path>] <command>
 
@@ -111,10 +131,15 @@ func (p paths) kick(name string) string { return filepath.Join(p.dir, "kick-"+na
 
 func realMain(args []string, e *env) int {
 	fs := flag.NewFlagSet("autowifi", flag.ContinueOnError)
-	fs.SetOutput(e.stderr)
+	fs.SetOutput(io.Discard)
 	cfgPath := fs.String("config", "", "config file (default "+filepath.Join(e.configDir, "config.json")+")")
-	fs.Usage = func() { fmt.Fprint(e.stderr, usage) }
+	fs.Usage = func() {} // -h is handled below; errors print usage themselves
 	if err := fs.Parse(args); err != nil {
+		if errors.Is(err, flag.ErrHelp) {
+			fmt.Fprint(e.stdout, usage)
+			return 0
+		}
+		fmt.Fprintf(e.stderr, "autowifi: %v\n\n%s", err, usage)
 		return 2
 	}
 	p := paths{config: *cfgPath, dir: e.configDir}
@@ -377,7 +402,9 @@ func cmdRun(e *env, p paths, rest []string) int {
 	if _, err := os.Stat(p.state); errors.Is(err, os.ErrNotExist) {
 		firstRun = true
 	}
-	if _, err := e.store.Get(); errors.Is(err, creds.ErrNotFound) && firstRun {
+	if !firstRun {
+		// nothing to ask
+	} else if _, err := e.store.Get(); errors.Is(err, creds.ErrNotFound) {
 		if c, err := askCredentials(e); err == nil {
 			if err := e.store.Set(c); err != nil {
 				logf("store credentials: %v", err)
@@ -395,31 +422,34 @@ func cmdRun(e *env, p paths, rest []string) int {
 	ctx, cancel := context.WithCancel(e.ctx)
 	defer cancel()
 
-	var tr *tray.Tray
-	trayReady := make(chan struct{})
+	var (
+		trMu       sync.Mutex
+		tr         *tray.Tray
+		lastStatus portal.Outcome
+	)
+	setStatus := func(o portal.Outcome) {
+		trMu.Lock()
+		defer trMu.Unlock()
+		lastStatus = o
+		if tr != nil {
+			tr.SetStatus(o)
+		}
+	}
 	a := &agent.Agent{
 		Engine: en, After: e.after, PollInterval: e.pollInterval,
 		OnStep: func(t engine.Trigger, s engine.Step) {
 			logf("next check in %s", s.Next.Round(time.Second)) // the engine already logged the outcome
 			_ = os.WriteFile(filepath.Join(p.dir, "last-outcome"),
 				[]byte(fmt.Sprintf("%s at %s\n", s.Outcome, time.Now().Format(time.RFC3339))), 0o600)
-			select {
-			case <-trayReady:
-				if tr != nil {
-					tr.SetStatus(s.Outcome)
-				}
-			default:
-			}
+			setStatus(s.Outcome)
 		},
 	}
 	go watchKicks(ctx, p, a, e.kickInterval)
 	go checkUpdates(ctx, logf, e.updateInterval, func(tag, url string) {
-		select {
-		case <-trayReady:
-			if tr != nil {
-				tr.SetUpdate(tag, url)
-			}
-		default:
+		trMu.Lock()
+		defer trMu.Unlock()
+		if tr != nil {
+			tr.SetUpdate(tag, url)
 		}
 	})
 
@@ -441,7 +471,12 @@ func cmdRun(e *env, p paths, rest []string) int {
 		SetCredentials: func() {
 			go func() {
 				c, err := e.askDialog()
+				if errors.Is(err, prompt.ErrCancelled) {
+					return
+				}
 				if err != nil {
+					logf("credential dialog: %v", err)
+					_ = e.notifier.Notify("AutoWiFi BITS", "Could not open the ID and password dialog. Run 'autowifi setup' in a terminal.")
 					return
 				}
 				if err := e.store.Set(c); err != nil {
@@ -462,7 +497,14 @@ func cmdRun(e *env, p paths, rest []string) int {
 			}
 			return e.autostartOff(e.home)
 		},
-	}, func(t *tray.Tray) { tr = t; close(trayReady) })
+	}, func(t *tray.Tray) {
+		trMu.Lock()
+		defer trMu.Unlock()
+		tr = t
+		if lastStatus != "" { // the first check may finish before the menu exists
+			t.SetStatus(lastStatus)
+		}
+	})
 	cancel()
 	<-done
 	logf("agent stopped")

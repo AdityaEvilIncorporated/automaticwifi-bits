@@ -167,5 +167,9 @@ func OpenURL(u string) error {
 	default:
 		cmd = exec.Command("xdg-open", u)
 	}
-	return cmd.Start()
+	if err := cmd.Start(); err != nil {
+		return err
+	}
+	go func() { _ = cmd.Wait() }() // reap it: no zombie per click
+	return nil
 }

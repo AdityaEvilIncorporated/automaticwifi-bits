@@ -14,6 +14,7 @@ import (
 	"autowifi/internal/creds"
 	"autowifi/internal/mockportal"
 	"autowifi/internal/portal"
+	"autowifi/internal/prompt"
 	"autowifi/internal/state"
 	"autowifi/internal/tlsconf"
 )
@@ -285,4 +286,72 @@ func TestRotWriter(t *testing.T) {
 	if fi, _ := os.Stat(p); fi.Mode().Perm() != 0o600 {
 		t.Fatal("log mode")
 	}
+}
+
+func TestHelpAndConfigFlag(t *testing.T) {
+	f := newFixture(t)
+	for _, h := range []string{"-h", "--help", "help"} {
+		if code := f.run(h); code != 0 || !strings.Contains(f.out.String(), "usage: autowifi") {
+			t.Fatalf("%s: exit %d", h, code)
+		}
+	}
+	// --config elsewhere: state and markers live next to it
+	other := t.TempDir()
+	src, _ := os.ReadFile(filepath.Join(f.env.configDir, "config.json"))
+	os.WriteFile(filepath.Join(other, "config.json"), src, 0o600)
+	f.storeGood()
+	if code := f.run("--config", filepath.Join(other, "config.json"), "login-now"); code != 0 {
+		t.Fatalf("--config login-now exit %d: %s", code, f.err.String())
+	}
+	if _, err := os.Stat(filepath.Join(other, "state.json")); err != nil {
+		t.Fatal("state not written next to --config")
+	}
+	if _, err := os.Stat(filepath.Join(f.env.configDir, "state.json")); err == nil {
+		t.Fatal("state written to the default dir despite --config")
+	}
+}
+
+func TestSetupCancelledAndDialogPath(t *testing.T) {
+	f := newFixture(t)
+	f.env.askTerminal = func() (creds.Credentials, error) { return creds.Credentials{}, prompt.ErrCancelled }
+	if code := f.run("setup"); code != 1 || !strings.Contains(f.err.String(), "Cancelled") {
+		t.Fatalf("cancelled: exit %d", code)
+	}
+	if _, err := f.env.store.Get(); err == nil {
+		t.Fatal("stored after cancel")
+	}
+	f.env.interactive = false
+	used := false
+	f.env.askDialog = func() (creds.Credentials, error) {
+		used = true
+		return creds.Credentials{Username: "u", Password: "p"}, nil
+	}
+	if code := f.run("setup"); code != 0 || !used {
+		t.Fatalf("dialog path: exit %d used %v", code, used)
+	}
+}
+
+// A running agent paused on rejected credentials resumes when `autowifi setup` saves new ones.
+func TestSetupUnpausesRunningAgent(t *testing.T) {
+	f := newFixture(t)
+	f.env.store.Set(creds.Credentials{Username: mockportal.DefaultUsername, Password: "wrong"})
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	f.env.ctx = ctx
+	done := make(chan int, 1)
+	go func() { done <- realMain([]string{"run", "--no-tray"}, f.env) }()
+	eventually(t, "rejection", func() bool { return f.mock.Snapshot().LoginsFailed == 1 })
+	time.Sleep(50 * time.Millisecond)
+	if f.mock.Snapshot().LoginsFailed != 1 {
+		t.Fatal("retried a rejected password")
+	}
+	if code := f.run("setup"); code != 0 { // askTerminal returns the right password
+		t.Fatalf("setup exit %d", code)
+	}
+	eventually(t, "login with new password", func() bool { return f.mock.Snapshot().LoginsOK == 1 })
+	if f.notes.n.Load() != 1 {
+		t.Fatalf("notifications %d, want 1 (the rejection)", f.notes.n.Load())
+	}
+	cancel()
+	<-done
 }
