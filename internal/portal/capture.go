@@ -104,7 +104,12 @@ func (c *Client) Capture(ctx context.Context) (CaptureReport, error) {
 
 		forms := ParseForms(body)
 		if len(forms) > 0 {
-			r.FormAction = forms[0].Action
+			// The action is shown without its query string or fragment: those may carry the magic.
+			action := forms[0].Action
+			if i := strings.IndexAny(action, "?#"); i >= 0 {
+				action = action[:i]
+			}
+			r.FormAction = action
 			r.FormMethod = forms[0].Method
 		}
 		for fi, f := range forms {

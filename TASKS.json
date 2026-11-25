@@ -134,10 +134,10 @@
         "T07"
       ],
       "acceptance": "go test ./internal/portal/ -count=1 -run 'TestScenarios|TestCheckOnce|TestOnCampus|TestCredentialsReadOnly|TestCredsGet|TestProbe|TestLogin|TestKeepaliveAndLogout|TestMagic|TestErrorsNeverContain'",
-      "status": "todo",
-      "owner": null,
+      "status": "done",
+      "owner": "agy-agent",
       "attempts": 0,
-      "rung": 0,
+      "rung": 1,
       "files": [
         "internal/portal/client.go"
       ],
@@ -338,10 +338,10 @@
         "T07"
       ],
       "acceptance": "go test ./internal/portal/ -count=1 -run 'TestCapture'",
-      "status": "todo",
-      "owner": null,
+      "status": "done",
+      "owner": "agy-agent",
       "attempts": 0,
-      "rung": 0,
+      "rung": 1,
       "files": [
         "internal/portal/capture.go"
       ],
@@ -375,8 +375,8 @@
         "T13"
       ],
       "acceptance": "go test ./cmd/autowifi/ ./internal/agent/ -count=1",
-      "status": "todo",
-      "owner": null,
+      "status": "doing",
+      "owner": "supervisor",
       "attempts": 0,
       "rung": 0,
       "files": [

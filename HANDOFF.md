@@ -1,12 +1,16 @@
 # Handoff
 
+## Working agreement (from the user, 2026-11-25)
+Do routine review actions (merge/reject/take, small follow-up fixes with tests, commits, pushes to
+dev) without asking; report afterwards. Stop only for what CLAUDE.md reserves for a human.
+
 ## Current task
 Review round 1 done (2026-11-25). Merged: T01 T02 T03 T04 T08 T10 T11 T12 T21 T23 T31.
 T30: rejected once, resubmission good but merge conflicted (REVIEW_L1.md on both sides) and the
 merge script dropped the branch; recovered commit dcc95c8, took it, added the Get Group step, done.
 A redundant re-run of T30 (branch task/T30, based on stale dev, lacks the Get Group action) was NOT
 merged; dev keeps the reviewed guide. The branch can be deleted.
-Round 2 merged: T10W, T22. Round 3 merged: T05, T09. T07 (tlsconf) done by me: 17d553a.
+Round 2 merged: T10W, T22. Round 3 merged: T05, T09, T06, T13 (T13 + fix: form action shown without query/fragment). T07 (tlsconf) done by me: 17d553a.
 
 ## Done
 - intake read; PLAN.md, ARCHITECTURE.md, SCHEDULE.md, DECISIONS.md written.
