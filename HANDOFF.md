@@ -5,7 +5,7 @@ Do routine review actions (merge/reject/take, small follow-up fixes with tests, 
 dev) without asking; report afterwards. Stop only for what CLAUDE.md reserves for a human.
 
 ## Current task
-T14 done (2026-11-25): desktop agent, CLI, tray, prompts, lock, e2e. Next HARD: T24 (Android app).
+T14 and T24 done (2026-11-25). No HARD tasks left. Waiting on T32 (worker), then Definition of done.
 Earlier: review rounds 1-3 merged everything except T24/T32; T07 done by me (17d553a).
 
 ## Done
@@ -32,10 +32,10 @@ Earlier: review rounds 1-3 merged everything except T24/T32; T07 done by me (17d
 See DECISIONS.md.
 
 ## Next 3 steps
-1. bs-task.py queue: review T32 (release script/workflows; unblocked by T14).
-2. T24 Android app (HARD, mine): app module, PortalTls.kt, Keystore store, APK via Docker
-   android-sdk image; run second-opinion on a task/T24 branch before merging.
-3. Then Definition of done (security-reviewer, e2e-runner, TEST_REPORT, SHIPPING, deploy).
+1. bs-task.py queue: review T32. Its release.yml must call scripts/build-apk.sh with the
+   ANDROID_KEYSTORE_* secrets (blank = debug APK) and APP_VERSION_NAME/APP_VERSION_CODE.
+2. Definition of done: security-reviewer + e2e-runner subagents, TEST_REPORT.md, SHIPPING.md.
+3. Deploy: GitHub repo, release keystore (bs-secret + Actions secrets), tag, Pages; second-opinion release.
 
 ## Known problems
 - Desktop GUI paths (tray, osascript/Get-Credential/zenity dialogs, toasts, Run key, LaunchAgent
@@ -46,7 +46,8 @@ See DECISIONS.md.
 - ParseForms (T04) relies on the html5 tree: a <form> placed directly inside <table> loses its
   inputs (html5 foster-parenting). Standard FortiGate pages nest the table inside the form, so OK
   for now; if `capture` on campus shows no fields, switch to a tokenizer-based pass.
-- No Android SDK locally; APK build planned via Docker image in T24.
+- APK not run on a device or emulator here (no virtualization in the amd64 container): built,
+  unit-tested and linted only. Install-and-login on a real phone is on the campus checklist.
 - Campus facts (fields, cert trust, SSIDs) unconfirmed by design: campus checklist in PLAN.md.
 
 ## Verify commands

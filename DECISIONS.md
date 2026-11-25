@@ -40,3 +40,18 @@
 - 2026-11-25 Credential dialogs: macOS osascript with prompt text as argv; Windows PowerShell
   Get-Credential (UTF-8 over a stdout pipe only); Linux zenity/kdialog only with a display.
   Untested on real Windows/Linux desktops: on the release checklist.
+- 2026-11-25 T24 Android: plain Activity + programmatic views (no AppCompat); WorkManager only
+  dependency. Wi-Fi join = registerNetworkCallback(PendingIntent) → receiver (goAsync) → unique work
+  per trigger; 15-min periodic work; delayed keepalive/retry work. Every request uses the Wi-Fi
+  Network object (not a VPN, must have INTERNET). No-Wi-Fi checks still run through the Engine.
+  Config = standard defaults; only the pin is editable (Advanced), since only the campus TLS check
+  may need it on Android. Credentials: AES-256-GCM, non-exportable AndroidKeyStore key,
+  randomized encryption; all backup and device-transfer domains excluded.
+- 2026-11-25 APK build: Docker ghcr.io/cirruslabs/android-sdk:35 as linux/amd64 (its aapt2 is x86-64
+  only); natively when ANDROID_HOME is set (CI). Release signing only from env vars; the keystore
+  is created at deploy time and kept in bs-secret + GitHub Actions secrets, never in the repo.
+  Gradle wrapper 8.14.3 pinned by distributionSha256Sum.
+- 2026-11-25 T24 second opinion: round 1 "block" (12, all fixed), round 2 "concerns" (7, all fixed).
+- 2026-11-25 "Log out" ends the current session only; automatic login resumes at the next scheduled
+  check (desktop timer / Android periodic work), same on both platforms. A "pause" feature would be
+  a new requirement.

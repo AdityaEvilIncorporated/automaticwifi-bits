@@ -1,0 +1,54 @@
+{
+  "issues": [
+    {
+      "file": "android/app/src/main/kotlin/io/github/autowifibits/app/Logic.kt",
+      "fix": "Pass loggedIn (from engine.state.loggedIn) into Logic.nextDelayMs(step, loggedIn) and Checker/Scheduler.afterStep, returning step.nextMs when step.outcome == \"online\" && loggedIn; add a unit test in LogicTest.kt.",
+      "line": 12,
+      "problem": "Logic.nextDelayMs returns null for \"online\", so Scheduler.afterStep cancels the 5-minute keepalive work (NEXT) whenever a non-TIMER trigger runs while already logged in (state.loggedIn == true). Engine.run only takes the keepalive branch on Trigger.TIMER; Trigger.NETWORK (including the immediate callback fired when MainActivity.onCreate calls Scheduler.ensure -> registerNetworkCallback, or Wi-Fi AP roaming), Trigger.MANUAL (\"Log in now\"), and Trigger.START all run checkOnce and return Step(\"online\", STEADY_MS) while preserving the session, silently cancelling the 5-minute keepalive required by PROTOCOL.md §7 and degrading to the 15-minute periodic fallback.",
+      "severity": "medium"
+    },
+    {
+      "file": "android/app/src/main/kotlin/io/github/autowifibits/app/Receivers.kt",
+      "fix": "Use val pending = goAsync() and invoke pending.finish() when the WorkManager Operation.result future(s) complete on a background executor.",
+      "line": 10,
+      "problem": "NetworkReceiver.onReceive and BootReceiver.onReceive (lines 17-22) enqueue WorkManager work and return immediately without goAsync(). WorkManager persists work to Room SQLite and schedules JobScheduler asynchronously on a background executor, so on Android 11+ (Cached Apps Freezer) a cold-started broadcast process can be frozen or killed right after onReceive returns, dropping the enqueue.",
+      "severity": "medium"
+    },
+    {
+      "file": "android/app/src/main/kotlin/io/github/autowifibits/app/StateStore.kt",
+      "fix": "Use .commit() instead of .apply() in StateStore.save() and lastOutcome (both run on WorkManager's background thread).",
+      "line": 27,
+      "problem": "StateStore.save() and lastOutcome (line 32) use SharedPreferences.Editor.apply() (asynchronous disk flush) right before CheckWorker.doWork() returns Result.success(). Android can freeze or terminate the background worker process before the async write completes, risking loss of persisted SessionState (keepaliveUrl, credentialsRejected, lastNotificationAtMs, consecutiveFailures).",
+      "severity": "medium"
+    },
+    {
+      "file": "android/app/src/main/kotlin/io/github/autowifibits/app/CredentialStore.kt",
+      "fix": "Catch java.security.ProviderException in addition to GeneralSecurityException (and guard deleteEntry with runCatching) before retrying write(plain).",
+      "line": 70,
+      "problem": "CredentialStore.set() only catches GeneralSecurityException for its corrupt-key recovery path, missing java.security.ProviderException (a RuntimeException commonly thrown by Android Keystore / KeyMint on broken or invalidated keys), which leaves users unable to save credentials until app data is cleared.",
+      "severity": "low"
+    },
+    {
+      "file": "android/app/src/main/kotlin/io/github/autowifibits/app/Checker.kt",
+      "fix": "Attach a PendingIntent.getActivity for MainActivity (FLAG_UPDATE_CURRENT or FLAG_IMMUTABLE) via .setContentIntent(...).",
+      "line": 99,
+      "problem": "Checker.post() sets .setAutoCancel(true) on alert notifications without setting .setContentIntent(...). Tapping notifications that instruct the user to update rejected or missing credentials neither opens MainActivity nor dismisses the notification.",
+      "severity": "low"
+    },
+    {
+      "file": "android/app/build.gradle.kts",
+      "fix": "When env(\"APP_VERSION_CODE\") is non-null, fail the build if it does not parse as a positive Int; only default to 1 when unset/blank.",
+      "line": 16,
+      "problem": "versionCode = env(\"APP_VERSION_CODE\")?.toIntOrNull() ?: 1 silently falls back to 1 when APP_VERSION_CODE is set to a non-integer string (e.g. a tag like \"v1.0.0\" in a misconfigured release build), risking shipping an APK that breaks in-place upgrades.",
+      "severity": "low"
+    },
+    {
+      "file": "android/app/src/main/kotlin/io/github/autowifibits/app/ConfigStore.kt",
+      "fix": "Extract pin normalization and 64-hex validation to a pure helper (e.g. in Logic.kt) and add JVM unit tests covering valid mixed-case/trimmed pins, empty clearing, and invalid inputs.",
+      "line": 16,
+      "problem": "Pin normalization and validation logic in ConfigStore (pin getter/setter) has no unit tests.",
+      "severity": "low"
+    }
+  ],
+  "verdict": "concerns"
+}

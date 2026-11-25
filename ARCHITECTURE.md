@@ -60,7 +60,7 @@ trigger (start | 2 s address poll change (3 s debounce) | Step.Next timer | tray
 | PortalConfig | `<UserConfigDir>/autowifi-bits/config.json` (absent = defaults) | 0600 |
 | SessionState | `<UserConfigDir>/autowifi-bits/state.json` | 0600 |
 | Log | `<UserConfigDir>/autowifi-bits/autowifi.log`, 1 MiB, rotated once; outcomes only | 0600 |
-| Android | Keystore AES-256-GCM key `autowifi-creds` encrypts credentials in SharedPreferences; config + state in SharedPreferences | app-private |
+| Android | Keystore AES-256-GCM key `autowifi-creds` encrypts credentials in SharedPreferences; state + pin in SharedPreferences; backups and device transfer excluded | app-private |
 
 ## Security rules (enforced by tests)
 1. Credentials go only to `https://{portal_host}:{portal_port}{login_path}` (host rule).
@@ -72,9 +72,9 @@ trigger (start | 2 s address poll change (3 s debounce) | Step.Next timer | tray
 ## Toolchain
 - Go 1.26 (local), cgo only for the macOS tray. Release: macOS host (universal binary via
   `lipo`), Linux and Windows cross-compiled with `CGO_ENABLED=0`.
-- Kotlin 2.2.20, JDK 17 in Docker `gradle:8.14-jdk17` (`scripts/test-android.sh`); the APK is
-  built with the Android SDK image in CI (and locally in T24 with
-  `ghcr.io/cirruslabs/android-sdk`), AGP pinned in T24.
+- Kotlin 2.2.20, Java 17 bytecode. Core tests: Docker `gradle:8.14-jdk17` (`scripts/test-android.sh`).
+  APK: `scripts/build-apk.sh` (AGP 8.7.3, compile/target SDK 35, min 26) natively with ANDROID_HOME
+  or in `ghcr.io/cirruslabs/android-sdk:35` (linux/amd64).
 
 ## Dependencies (each one has a reason)
 Go:
@@ -89,8 +89,8 @@ Go:
 Kotlin (core):
 - `org.jsoup:jsoup`: same reason as x/net/html.
 - tests only: JUnit 5, `org.json` (reads the shared JSON cases).
-Kotlin (app, T24): AndroidX WorkManager (spec), AndroidX core/appcompat for the settings
-screen. Nothing else.
+Kotlin (app, T24): AndroidX WorkManager (spec). Nothing else: the one screen is a plain
+Activity with programmatic views.
 
 ## Decisions
 - No SSID logic anywhere except the iOS automation (spec non-goal).

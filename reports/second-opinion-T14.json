@@ -1,0 +1,61 @@
+{
+  "issues": [
+    {
+      "file": "internal/prompt/dialog_windows.go",
+      "fix": "Detect user cancellation in the PowerShell script (e.g., trap/catch cancellation and exit 0 with empty stdout) or map cancellation *exec.ExitError to ErrCancelled instead of returning a generic error.",
+      "line": 28,
+      "problem": "Cancelling the Windows Get-Credential dialog is not mapped to ErrCancelled. In Windows PowerShell, clicking Cancel on Get-Credential raises a pipeline/cancellation error and exits powershell.exe with exit status 1. Because dialog() returns err directly when cmd.Output() fails (unlike dialog_darwin.go and dialog_linux.go), cancelling the tray dialog logs an error and pops up a misleading \"Could not open the ID and password dialog\" notification, and cancelling non-interactive setup prints an exit-status error instead of \"Cancelled; nothing saved.\"",
+      "severity": "medium"
+    },
+    {
+      "file": "cmd/autowifi/main.go",
+      "fix": "Only install signal.NotifyContext for commands that need graceful shutdown (such as run/login-now/logout/capture), or stop trapping os.Interrupt while prompt.Terminal.Ask reads from stdin (ensuring terminal state is restored on interrupt).",
+      "line": 43,
+      "problem": "main() registers signal.NotifyContext for os.Interrupt globally before dispatching subcommands, including interactive `setup` and first-run `run`. prompt.Terminal.Ask() reads os.Stdin via bufio.NewReader(t.In).ReadString('\\n') and term.ReadPassword without consulting ctx; because Go traps SIGINT with SA_RESTART and retries EINTR on os.File reads, pressing Ctrl-C at the ID or password prompt hangs and ignores the interrupt (and force-killing with Ctrl-\\ during term.ReadPassword leaves terminal echo disabled).",
+      "severity": "medium"
+    },
+    {
+      "file": "cmd/autowifi/app.go",
+      "fix": "Add an onExit callback to tray.Run that sets tr = nil under trMu before native teardown, defer calling tray.Quit() until after onReady (checking ctx.Err() in onReady if already cancelled), and wait for watchKicks/checkUpdates to exit before defer closeLog() runs.",
+      "line": 467,
+      "problem": "Tray startup/shutdown lifecycle race: (1) on shutdown, tray.Run() returns after systray tears down the native UI while a.Run(ctx) (`<-done` at line 509) and checkUpdates are still running, and tr is never cleared to nil under trMu (tray.Run passes an empty onExit callback in internal/tray/tray.go:43), so an in-flight OnStep or update callback can call tr.SetStatus/tr.SetUpdate on a torn-down systray; (2) on startup, the goroutine `<-ctx.Done(); tray.Quit()` at line 467 can invoke tray.Quit() before systray.Run enters its native event loop if ctx cancels early.",
+      "severity": "medium"
+    },
+    {
+      "file": "internal/prompt/dialog_linux.go",
+      "fix": "Return ErrNoDialog immediately when both DISPLAY and WAYLAND_DISPLAY are empty, and in run() only map ee.ExitCode() == 1 (not crash/timeout exit codes like -1 or 255) to ErrCancelled.",
+      "line": 19,
+      "problem": "run() maps every *exec.ExitError from zenity/kdialog to ErrCancelled. In headless Linux environments (e.g., SSH or missing DISPLAY/WAYLAND_DISPLAY) where zenity is installed, zenity exits non-zero (\"cannot open display\") and is misreported as ErrCancelled instead of ErrNoDialog/error, suppressing the guidance to run `autowifi setup` in a terminal. Non-cancel failures (crashes or 5-minute timeout SIGKILL) are also masked as cancellation.",
+      "severity": "medium"
+    },
+    {
+      "file": "cmd/autowifi/app.go",
+      "fix": "Send a user notification when e.store.Set fails in the tray callback, log non-ErrCancelled errors from first-run askCredentials, and log errors returned by SetAutostart.",
+      "line": 482,
+      "problem": "Silent error handling on user-initiated credential and autostart actions: when e.store.Set(c) fails in the tray \"Set ID and password…\" handler (lines 482-485), it only logs to autowifi.log without notifying the user that their credentials were not saved; first-run askCredentials errors (lines 408-418) such as prompt.ErrNoDialog are silently discarded without logging; and SetAutostart errors in internal/tray/tray.go:79-85 (app.go:494-499) are dropped without logging or feedback.",
+      "severity": "medium"
+    },
+    {
+      "file": "cmd/autowifi/rotlog.go",
+      "fix": "Set w.f = nil after closing, guard Write (attempting w.open() without renaming if w.f == nil) and guard Close against w.f == nil.",
+      "line": 45,
+      "problem": "In rotWriter.Write, if w.open() fails after w.f.Close() during rotation (lines 45-49), w.f remains a closed *os.File and w.size stays > 0. Subsequent writes retry closing and renaming w.path over w.path+\".1\", and Close() fails with fs.ErrClosed.",
+      "severity": "low"
+    },
+    {
+      "file": "cmd/autowifi/app.go",
+      "fix": "Avoid creating missing directories/lock files on `status` (treat missing lock file as not running on Unix), and check errors.Is(credErr, creds.ErrNotFound) so unexpected credential-store errors are reported rather than shown as \"no\".",
+      "line": 331,
+      "problem": "cmdStatus checks whether an agent is running by calling acquireLock(p.lock) and immediately releasing it. On Unix this creates the config directory and agent.lock as a side effect of a read-only command and briefly holds the exclusive lock (racing with a concurrently starting agent). Also line 329 collapses non-ErrNotFound store errors (e.g., locked Keychain or permission error) into \"ID and password stored: no\".",
+      "severity": "low"
+    },
+    {
+      "file": "cmd/autowifi/app.go",
+      "fix": "Make the update API URL and initial wait injectable on env (defaulting to GitHub and 1 minute) and add a test in cmd/autowifi/e2e_test.go covering newer-release detection and error/same-version handling.",
+      "line": 540,
+      "problem": "checkUpdates (lines 540-564) has no test coverage because version==\"dev\", repo==\"\", the GitHub API URL, and the 1-minute initial wait are hardcoded.",
+      "severity": "low"
+    }
+  ],
+  "verdict": "concerns"
+}

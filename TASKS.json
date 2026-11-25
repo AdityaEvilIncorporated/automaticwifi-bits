@@ -490,8 +490,8 @@
         "T23"
       ],
       "acceptance": "bash scripts/test-android.sh && bash scripts/build-apk.sh",
-      "status": "todo",
-      "owner": null,
+      "status": "done",
+      "owner": "supervisor",
       "attempts": 0,
       "rung": 0,
       "files": [
@@ -564,10 +564,10 @@
         "T14"
       ],
       "acceptance": "bash scripts/build-release.sh v0.0.1-test && bash scripts/check-dist.sh v0.0.1-test",
-      "status": "todo",
-      "owner": null,
+      "status": "NEEDS_SUPERVISOR",
+      "owner": "supervisor",
       "attempts": 0,
-      "rung": 0,
+      "rung": 3,
       "files": [
         "scripts/build-release.sh",
         ".github/workflows/release.yml",
