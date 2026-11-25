@@ -13,7 +13,7 @@ Ubuntu 22.04+ (should), Android 8.0+ (API 26), and iOS through Apple Shortcuts.
 ## Deliverables
 | Platform | What | How it triggers |
 |---|---|---|
-| macOS / Windows / Linux | `autowifi` Go single binary, tray/menu-bar icon, login item | start, network change (interface address poll every 15 s), every 5 min, "Log in now" |
+| macOS / Windows / Linux | `autowifi` Go single binary, tray/menu-bar icon, login item | start, network change (interface address poll every 2 s, 3 s debounce), every 5 min, "Log in now" |
 | Android | `autowifi-bits.apk` (Kotlin) | Wi-Fi connect (`registerNetworkCallback` with PendingIntent), WorkManager every 15 min, "Log in now" button |
 | iOS | `ios/SHORTCUT_GUIDE.md`: build-it-yourself Shortcut + "When joining Wi-Fi" personal automation | joining a listed campus SSID |
 | All | `protocol/PROTOCOL.md` + `protocol/testcases/*.json` + mock portal | n/a |

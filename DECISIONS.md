@@ -9,7 +9,8 @@
   action or any other host (protects credentials from look-alike portals).
 - 2026-11-25 TLS: OS trust store first; optional SPKI SHA-256 pin bound to portal_host. The capture
   command reads the certificate with a handshake-only connection (no HTTP) to print the pin.
-- 2026-11-25 Network change on desktop = 15 s interface-address poll (no per-OS APIs, no SSIDs).
+- 2026-11-25 Network change on desktop = interface-address poll every 2 s with a 3 s debounce (no
+  per-OS APIs, no SSIDs). Was 15 s; changed in T14: the debounce only works if polling is faster.
 - 2026-11-25 Kotlin core is plain JVM, tested in Docker gradle:8.14-jdk17 against the Go mock binary.
 - 2026-11-25 Release assets have unversioned names so the page can link releases/latest/download/<name>.
 - 2026-11-25 Release repo guess: RELEASE_REPO = AdityaEvilIncorporated/automaticwifi-bits (from the git

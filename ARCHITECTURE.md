@@ -34,7 +34,7 @@ scripts/             verify.sh, test-android.sh, build-release.sh (T32), check-d
 
 ## Desktop data flow
 ```
-trigger (start | 15 s address poll change | Step.Next timer | tray "Log in now" | setup)
+trigger (start | 2 s address poll change (3 s debounce) | Step.Next timer | tray "Log in now" | setup)
   → agent (one goroutine, coalesces triggers)
   → engine.Run(trigger)
       paused?  keepalive due?  → portal.Client.CheckOnce(creds.Get)
