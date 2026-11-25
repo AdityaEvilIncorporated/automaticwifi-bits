@@ -246,5 +246,27 @@ func FormatCapture(r CaptureReport) string {
 	for _, n := range r.Notes {
 		lines = append(lines, "Note: "+n)
 	}
+	for i, l := range lines {
+		lines[i] = printable(l)
+	}
 	return strings.Join(lines, "\n") + "\n"
+}
+
+// printable drops control characters (a hostile page or certificate could carry terminal
+// escape sequences) and caps each line at 300 runes.
+func printable(s string) string {
+	var b strings.Builder
+	n := 0
+	for _, r := range s {
+		if r < 0x20 || r == 0x7f || (r >= 0x80 && r < 0xa0) {
+			continue
+		}
+		if n == 300 {
+			b.WriteString("…")
+			break
+		}
+		b.WriteRune(r)
+		n++
+	}
+	return b.String()
 }

@@ -16,3 +16,8 @@ android/.gradle/
 android/**/build/
 android/local.properties
 dist/
+
+# local backups (tooling); never commit
+*.bak
+*.bak-*
+.playwright-mcp/

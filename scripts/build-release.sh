@@ -6,6 +6,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 v=${1:?usage: build-release.sh <version>}
+[[ "$v" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$ ]] || { echo "build-release: version must look like v1.2.3 or v1.2.3-rc.1" >&2; exit 1; }
 [ "$(uname -s)" = Darwin ] || { echo "build-release: run on macOS (the macOS build needs cgo)" >&2; exit 1; }
 repo=$(tr -d '[:space:]' < RELEASE_REPO)
 ld="-s -w -X main.version=$v -X main.repo=$repo"

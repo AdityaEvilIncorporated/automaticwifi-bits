@@ -5,6 +5,7 @@ package tray
 import (
 	"errors"
 	"os/exec"
+	"regexp"
 	"runtime"
 	"strings"
 	"sync"
@@ -148,9 +149,20 @@ func StatusText(o portal.Outcome) string {
 	return "Working…"
 }
 
-// IsReleaseURL reports whether u is an https://github.com/ page (the only kind we open).
+// releasePath is /<owner>/<repo>/releases/... with plain path segments only.
+var releasePath = regexp.MustCompile(`^/[A-Za-z0-9_.-]+/[A-Za-z0-9_.-]+/releases(/[A-Za-z0-9_.+-]+)*$`)
+
+// IsReleaseURL reports whether u is an https://github.com/<owner>/<repo>/releases/... page
+// (the only kind we open): no query, fragment, credentials, ".." segments or odd characters.
 func IsReleaseURL(u string) bool {
-	return strings.HasPrefix(u, "https://github.com/") && !strings.ContainsAny(u, " \t\r\n\"'`")
+	if !strings.HasPrefix(u, "https://github.com/") || strings.ContainsAny(u, " \t\r\n\"'`?#@%\\") {
+		return false
+	}
+	path := strings.TrimPrefix(u, "https://github.com")
+	if strings.Contains(path, "/../") || strings.HasSuffix(path, "/..") || strings.Contains(path, "/./") {
+		return false
+	}
+	return releasePath.MatchString(path)
 }
 
 // OpenURL opens a GitHub release page in the default browser. Any other URL is refused.

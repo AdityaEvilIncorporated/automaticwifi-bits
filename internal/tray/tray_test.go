@@ -21,7 +21,9 @@ func TestStatusTextCoversEveryOutcome(t *testing.T) {
 func TestIsReleaseURL(t *testing.T) {
 	ok := []string{"https://github.com/o/r/releases/tag/v1.2.3"}
 	bad := []string{"", "http://github.com/o/r", "https://github.com.evil.example/x", "https://evil.example/https://github.com/",
-		"file:///etc/passwd", "https://github.com/o/r\" & calc", "javascript:alert(1)"}
+		"file:///etc/passwd", "https://github.com/o/r\" & calc", "javascript:alert(1)",
+		"https://github.com/login", "https://github.com/o/r", "https://github.com/o/r/settings",
+		"https://github.com/o/r/releases/../../settings", "https://github.com/o/r/releases/tag/v1?x=1"}
 	for _, u := range ok {
 		if !IsReleaseURL(u) {
 			t.Errorf("%q refused", u)

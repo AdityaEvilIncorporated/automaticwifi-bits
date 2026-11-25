@@ -23,6 +23,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0 # the reviewed-commit check below needs dev's history
       - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
         with:
           go-version-file: go.mod
@@ -31,6 +33,19 @@ jobs:
           distribution: temurin
           java-version: "17"
       - uses: android-actions/setup-android@9fc6c4e9069bf8d3d10b2204b1fb8f6ef7065407 # v3
+
+      # Runs before any secret is in scope: a well-formed tag (it feeds shell arithmetic and
+      # -ldflags), equal to RELEASE_TAG (the download page links it), on a commit already on dev
+      # (so a tag pushed on an unreviewed branch never gets the signing key).
+      - name: Check the tag
+        run: |
+          [[ "$GITHUB_REF_NAME" =~ ^v[0-9]+\.[0-9]+\.[0-9]+(-[0-9A-Za-z.]+)?$ ]] || { echo "::error::bad tag $GITHUB_REF_NAME"; exit 1; }
+          git merge-base --is-ancestor "$GITHUB_SHA" origin/dev || { echo "::error::$GITHUB_SHA is not on dev"; exit 1; }
+          want=$(tr -d '[:space:]' < RELEASE_TAG)
+          if [ "$GITHUB_REF_NAME" != "$want" ]; then
+            echo "::error::tag $GITHUB_REF_NAME but RELEASE_TAG says $want: update RELEASE_TAG and site/index.html first"
+            exit 1
+          fi
 
       - name: Kotlin core tests (shared cases + mock portal)
         run: |
@@ -104,6 +119,16 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          pre=""
-          case "$GITHUB_REF_NAME" in *-*) pre="--prerelease" ;; esac
-          gh release create "$GITHUB_REF_NAME" dist/* --verify-tag --generate-notes $pre
+          # RELEASE_BETA (one line, the label) or a "-" in the tag makes this a pre-release.
+          args=(--verify-tag --generate-notes --title "$GITHUB_REF_NAME")
+          notes="$RUNNER_TEMP/notes.md"
+          : > "$notes"
+          case "$GITHUB_REF_NAME" in *-*) args+=(--prerelease) ;; esac
+          if [ -f RELEASE_BETA ]; then
+            label=$(head -n 1 RELEASE_BETA)
+            args=(--verify-tag --generate-notes --prerelease --title "$GITHUB_REF_NAME ($label)")
+            owner=${GITHUB_REPOSITORY%%/*}; name=${GITHUB_REPOSITORY#*/}
+            page="https://$(printf '%s' "$owner" | tr '[:upper:]' '[:lower:]').github.io/$name/#campus-checklist"
+            printf '**%s.** Tested against a simulated FortiGate portal only.\nBefore relying on it, run the campus verification checklist: %s\n\n' "$label" "$page" > "$notes"
+          fi
+          gh release create "$GITHUB_REF_NAME" dist/* "${args[@]}" --notes-file "$notes"

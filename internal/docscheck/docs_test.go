@@ -58,8 +58,22 @@ func TestShortcutGuide(t *testing.T) {
 func TestDownloadPage(t *testing.T) {
 	page := read(t, "site/index.html")
 	repo := strings.TrimSpace(read(t, "RELEASE_REPO"))
+	// Links name the tag in RELEASE_TAG: /releases/latest/ skips pre-releases, so it would 404
+	// while only beta builds exist. release.yml refuses a tag that differs from RELEASE_TAG.
+	tag := strings.TrimSpace(read(t, "RELEASE_TAG"))
+	if !regexp.MustCompile(`^v\d+\.\d+\.\d+(-[0-9A-Za-z.]+)?$`).MatchString(tag) {
+		t.Fatalf("RELEASE_TAG %q is not vMAJOR.MINOR.PATCH", tag)
+	}
+	if strings.Contains(page, "/releases/latest/") {
+		t.Error("site/index.html must link the tag in RELEASE_TAG, not /releases/latest/")
+	}
+	// While RELEASE_BETA exists the page must carry its label and point at the checklist.
+	if beta, err := os.ReadFile(filepath.Join("..", "..", "RELEASE_BETA")); err == nil {
+		mustContain(t, page, "site/index.html", tag+" pre-release", strings.TrimSpace(string(beta)),
+			`href="#campus-checklist"`, `id="campus-checklist"`)
+	}
 	for _, a := range Assets {
-		want := "https://github.com/" + repo + "/releases/latest/download/" + a
+		want := "https://github.com/" + repo + "/releases/download/" + tag + "/" + a
 		if !strings.Contains(page, want) {
 			t.Errorf("site/index.html must link %s", want)
 		}

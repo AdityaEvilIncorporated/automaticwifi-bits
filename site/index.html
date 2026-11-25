@@ -75,6 +75,13 @@
     tr:last-child td { border-bottom: none; }
     ul { padding-left: 1.25rem; }
     li { margin: 0.35rem 0; }
+    .beta {
+      border: 2px solid #b45309;
+      background: #fef3c7;
+      color: #451a03;
+      padding: 0.75rem 1rem;
+      border-radius: 4px;
+    }
     footer {
       margin-top: 3rem;
       padding-top: 1rem;
@@ -88,6 +95,8 @@
   <main>
     <header>
       <h1>AutoWiFi BITS</h1>
+    <p class="beta" role="note"><strong>v0.1.0 pre-release &mdash; beta: not yet verified on the real BITS portal.</strong>
+      It is tested against a simulated FortiGate portal only. Run the <a href="#campus-checklist">campus verification checklist</a> below before relying on it.</p>
       <p class="pitch">Free, open source, no servers: your ID and password never leave your device except to the campus portal.</p>
       <p><a href="https://github.com/AdityaEvilIncorporated/automaticwifi-bits">Source code on GitHub</a></p>
     </header>
@@ -104,31 +113,31 @@
         <tbody>
           <tr>
             <td>macOS (Apple Silicon &amp; Intel)</td>
-            <td><a href="https://github.com/AdityaEvilIncorporated/automaticwifi-bits/releases/latest/download/autowifi-macos.zip">autowifi-macos.zip</a></td>
+            <td><a href="https://github.com/AdityaEvilIncorporated/automaticwifi-bits/releases/download/v0.1.0/autowifi-macos.zip">autowifi-macos.zip</a></td>
           </tr>
           <tr>
             <td>Windows (64-bit x86_64)</td>
-            <td><a href="https://github.com/AdityaEvilIncorporated/automaticwifi-bits/releases/latest/download/autowifi-windows-amd64.zip">autowifi-windows-amd64.zip</a></td>
+            <td><a href="https://github.com/AdityaEvilIncorporated/automaticwifi-bits/releases/download/v0.1.0/autowifi-windows-amd64.zip">autowifi-windows-amd64.zip</a></td>
           </tr>
           <tr>
             <td>Windows (ARM64)</td>
-            <td><a href="https://github.com/AdityaEvilIncorporated/automaticwifi-bits/releases/latest/download/autowifi-windows-arm64.zip">autowifi-windows-arm64.zip</a></td>
+            <td><a href="https://github.com/AdityaEvilIncorporated/automaticwifi-bits/releases/download/v0.1.0/autowifi-windows-arm64.zip">autowifi-windows-arm64.zip</a></td>
           </tr>
           <tr>
             <td>Linux (64-bit x86_64)</td>
-            <td><a href="https://github.com/AdityaEvilIncorporated/automaticwifi-bits/releases/latest/download/autowifi-linux-amd64.tar.gz">autowifi-linux-amd64.tar.gz</a></td>
+            <td><a href="https://github.com/AdityaEvilIncorporated/automaticwifi-bits/releases/download/v0.1.0/autowifi-linux-amd64.tar.gz">autowifi-linux-amd64.tar.gz</a></td>
           </tr>
           <tr>
             <td>Linux (ARM64)</td>
-            <td><a href="https://github.com/AdityaEvilIncorporated/automaticwifi-bits/releases/latest/download/autowifi-linux-arm64.tar.gz">autowifi-linux-arm64.tar.gz</a></td>
+            <td><a href="https://github.com/AdityaEvilIncorporated/automaticwifi-bits/releases/download/v0.1.0/autowifi-linux-arm64.tar.gz">autowifi-linux-arm64.tar.gz</a></td>
           </tr>
           <tr>
             <td>Android (8.0+)</td>
-            <td><a href="https://github.com/AdityaEvilIncorporated/automaticwifi-bits/releases/latest/download/autowifi-bits.apk">autowifi-bits.apk</a></td>
+            <td><a href="https://github.com/AdityaEvilIncorporated/automaticwifi-bits/releases/download/v0.1.0/autowifi-bits.apk">autowifi-bits.apk</a></td>
           </tr>
           <tr>
             <td>Checksums</td>
-            <td><a href="https://github.com/AdityaEvilIncorporated/automaticwifi-bits/releases/latest/download/SHA256SUMS.txt">SHA256SUMS.txt</a></td>
+            <td><a href="https://github.com/AdityaEvilIncorporated/automaticwifi-bits/releases/download/v0.1.0/SHA256SUMS.txt">SHA256SUMS.txt</a></td>
           </tr>
         </tbody>
       </table>
@@ -158,7 +167,7 @@
       <p>If login fails because the portal changed, run <code>autowifi capture</code> while on campus. It prints the portal form fields and TLS details (never values).</p>
     </section>
 
-    <section>
+    <section id="campus-checklist">
       <h2>Campus verification checklist</h2>
       <ul>
         <li><code>autowifi capture</code> while the portal shows: portal fields match config defaults, action is <code>/</code>.</li>

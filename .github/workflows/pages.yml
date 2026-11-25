@@ -1,9 +1,10 @@
-# Publishes site/ (the static download page) to GitHub Pages.
+# Publishes site/ (the static download page) to GitHub Pages. dev is the GitHub default branch
+# (main is the human's record and is never pushed by the agent), so dev pushes deploy.
 name: pages
 
 on:
   push:
-    branches: [main]
+    branches: [dev]
     paths: ["site/**", ".github/workflows/pages.yml"]
   workflow_dispatch:
 

@@ -1,6 +1,7 @@
 package creds
 
 import (
+	"autowifi/internal/atomicfile"
 	"crypto/rand"
 	"encoding/hex"
 	"encoding/json"
@@ -66,18 +67,7 @@ func (f *fileStore) Set(c Credentials) error {
 	if err != nil {
 		return err
 	}
-	if err := os.MkdirAll(filepath.Dir(f.path), 0o700); err != nil {
-		return err
-	}
-	tmp := f.path + ".tmp"
-	if err := os.WriteFile(tmp, b, 0o600); err != nil {
-		return err
-	}
-	if err := os.Rename(tmp, f.path); err != nil {
-		_ = os.Remove(tmp)
-		return err
-	}
-	return nil
+	return atomicfile.WriteFile(f.path, b)
 }
 
 func (f *fileStore) Delete() error {

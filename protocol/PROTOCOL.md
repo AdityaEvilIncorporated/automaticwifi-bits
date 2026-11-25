@@ -106,6 +106,12 @@ The probe is plain HTTP by design. Every portal request is HTTPS and verified:
 3. Otherwise refuse (`portal_error`). Verification is never disabled; the pin applies to the
    portal client only.
 
+Known platform difference (fails closed): on Android, `HttpsURLConnection` still runs its
+hostname verifier after a pin match, so a pinned certificate must also name `portal_host`.
+The desktop client accepts a pin match regardless of the certificate's names. If the campus
+certificate is self-signed for another name, the Android pin will not help; the campus
+checklist step "Android logs the same" catches this.
+
 ## 7. Keepalive and logout
 
 - After `logged_in`, `GET keepalive_url` every 5 minutes.

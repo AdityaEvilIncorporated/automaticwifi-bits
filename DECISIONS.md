@@ -61,3 +61,22 @@
 - 2026-11-25 Process slip: T32 (64a08cf) was committed and pushed while verify.sh was failing
   (semgrep, unpinned actions) because the commit was chained with ';' after the check. Fixed in the
   next commit; from now on the commit is chained with '&&' after verify.
+- 2026-11-25 v0.1.0 ships as a GitHub pre-release labelled "beta: not yet verified on the real BITS
+  portal" (RELEASE_BETA). The page links /releases/download/<RELEASE_TAG>/ because
+  /releases/latest/ ignores pre-releases. release.yml refuses a tag that is malformed, not equal to
+  RELEASE_TAG, or not on dev. Delete RELEASE_BETA after the campus checklist passes.
+- 2026-11-25 Pages deploys on dev pushes: dev is the GitHub default branch; main is never pushed by
+  the agent (the human's record).
+- 2026-11-25 Security review (whole repo): 0 critical/high. Fixed: tag validation/injection and
+  reviewed-commit check before the signing key (M1, L2); atomic writes through O_EXCL temp files
+  (L4); capture output stripped of control characters (L6); update link must be a github.com
+  …/releases/ page (L7); Android pin+hostname difference documented in PROTOCOL.md (L8); tracked
+  .bak files removed (L9). Accepted: no release environment with required reviewers (single-owner
+  repo; the dev check covers it), no build-provenance attestation yet (L3), kick files in a shared
+  --config dir (L5: the default dir is per-user 0700; the temp-file fix closes the data leak).
+- 2026-11-25 govulncheck found 28 reachable stdlib vulns in go1.26.0: go.mod pins
+  `toolchain go1.26.11`; govulncheck now reports none.
+- 2026-11-25 Android release key: RSA 4096, PKCS12, alias autowifi-bits, 10000 days, made with
+  keytool in Docker; stored only in ~/.agent-secrets (provider android-automaticwifi-bits) and, once
+  allowed, GitHub Actions secrets. Cert SHA-256 A4:3B:43:C0:AC:44:A6:FA:82:F0:A4:93:A8:9F:2C:B3:33:
+  8A:4C:7C:A8:06:1C:C8:61:F9:FA:96:E2:8A:F8:23. Losing it means users must uninstall to update.

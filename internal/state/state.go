@@ -5,10 +5,10 @@
 package state
 
 import (
+	"autowifi/internal/atomicfile"
 	"encoding/json"
 	"errors"
 	"os"
-	"path/filepath"
 	"time"
 )
 
@@ -52,19 +52,12 @@ func Load(path string) (SessionState, error) {
 	return s, nil
 }
 
-// Save writes s as JSON atomically (path+".tmp" then rename), mode 0600, creating the parent
+// Save writes s as JSON atomically (atomicfile: unique temp file then rename), mode 0600, creating the parent
 // directory with mode 0700 if needed.
 func Save(path string, s SessionState) error {
-	if err := os.MkdirAll(filepath.Dir(path), 0o700); err != nil {
-		return err
-	}
 	data, err := json.MarshalIndent(s, "", "  ")
 	if err != nil {
 		return err
 	}
-	tmp := path + ".tmp"
-	if err := os.WriteFile(tmp, data, 0o600); err != nil {
-		return err
-	}
-	return os.Rename(tmp, path)
+	return atomicfile.WriteFile(path, data)
 }

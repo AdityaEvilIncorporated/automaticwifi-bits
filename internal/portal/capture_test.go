@@ -107,3 +107,25 @@ func TestCaptureOffCampus(t *testing.T) {
 		t.Fatal(FormatCapture(r))
 	}
 }
+
+func TestFormatCaptureStripsControlCharacters(t *testing.T) {
+	r := CaptureReport{
+		FormAction:  "/\x1b]0;pwned\x07login",
+		FormMethod:  "POST\r",
+		CertSubject: "fw\x1b[2J.example",
+		CertIssuer:  strings.Repeat("A", 500),
+		Fields:      []Field{{Form: 0, Name: "user\x00name", Type: "text\x7f"}},
+	}
+	out := FormatCapture(r)
+	for _, c := range out {
+		if c != '\n' && (c < 0x20 || c == 0x7f) {
+			t.Fatalf("control character %q in output:\n%q", c, out)
+		}
+	}
+	if !strings.Contains(out, "/]0;pwnedlogin") || !strings.Contains(out, "username (text)") {
+		t.Errorf("printable text should survive:\n%s", out)
+	}
+	if strings.Contains(out, strings.Repeat("A", 300)) {
+		t.Error("long values must be capped")
+	}
+}
