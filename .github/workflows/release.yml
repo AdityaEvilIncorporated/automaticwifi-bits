@@ -138,6 +138,8 @@ jobs:
             args=(--verify-tag --generate-notes --prerelease --title "$GITHUB_REF_NAME ($label)")
             owner=${GITHUB_REPOSITORY%%/*}; name=${GITHUB_REPOSITORY#*/}
             page="https://$(printf '%s' "$owner" | tr '[:upper:]' '[:lower:]').github.io/$name/#campus-checklist"
-            printf '**%s.** Tested against a simulated FortiGate portal only.\nBefore relying on it, run the campus verification checklist: %s\n\n' "$label" "$page" > "$notes"
+            printf '**%s.** Tested against a simulated FortiGate portal only.\nDownload page: %s\n\n' "$label" "$page" > "$notes"
+            cat CAMPUS_CHECKLIST.md >> "$notes"
+            printf '\n' >> "$notes"
           fi
           gh release create "$GITHUB_REF_NAME" dist/* "${args[@]}" --notes-file "$notes"

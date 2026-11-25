@@ -72,6 +72,10 @@ func TestDownloadPage(t *testing.T) {
 		mustContain(t, page, "site/index.html", tag+" pre-release", strings.TrimSpace(string(beta)),
 			`href="#campus-checklist"`, `id="campus-checklist"`)
 	}
+	// The release notes embed CAMPUS_CHECKLIST.md; it must cover the same checks as the page.
+	mustContain(t, read(t, "CAMPUS_CHECKLIST.md"), "CAMPUS_CHECKLIST.md",
+		"Campus verification checklist", "autowifi capture", "TLS verified by OS trust store",
+		"Wrong password", "1 hour", "SSID", "re-release")
 	for _, a := range Assets {
 		want := "https://github.com/" + repo + "/releases/download/" + tag + "/" + a
 		if !strings.Contains(page, want) {
