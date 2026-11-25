@@ -9,6 +9,12 @@
 //     data RunValue(exe).
 package autostart
 
+import (
+	"fmt"
+	"html"
+	"strings"
+)
+
 // Label is the launchd label and the base name of the plist.
 const Label = "io.github.autowifi-bits.agent"
 
@@ -17,8 +23,39 @@ const Label = "io.github.autowifi-bits.agent"
 // LimitLoadToSessionType "Aqua", no StandardOutPath/StandardErrorPath. exe is XML-escaped
 // (& < > " ').
 func LaunchAgentPlist(exe string) string {
-	panic("not implemented")
+	return fmt.Sprintf(`<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>Label</key>
+	<string>%s</string>
+	<key>ProgramArguments</key>
+	<array>
+		<string>%s</string>
+		<string>run</string>
+	</array>
+	<key>RunAtLoad</key>
+	<true/>
+	<key>KeepAlive</key>
+	<dict>
+		<key>SuccessfulExit</key>
+		<false/>
+	</dict>
+	<key>ProcessType</key>
+	<string>Background</string>
+	<key>LimitLoadToSessionType</key>
+	<string>Aqua</string>
+</dict>
+</plist>
+`, Label, html.EscapeString(exe))
 }
+
+var desktopEscaper = strings.NewReplacer(
+	`\`, `\\`,
+	`"`, `\"`,
+	"`", "\\`",
+	"$", `\$`,
+)
 
 // DesktopEntry returns the XDG autostart file for exe:
 //
@@ -34,12 +71,20 @@ func LaunchAgentPlist(exe string) string {
 // Quoting: always wrap exe in double quotes and backslash-escape " ` $ and \ inside it.
 // Lines end with "\n", including the last.
 func DesktopEntry(exe string) string {
-	panic("not implemented")
+	return fmt.Sprintf(`[Desktop Entry]
+Type=Application
+Name=AutoWiFi BITS
+Comment=Logs in to BITS campus Wi-Fi automatically
+Exec="%s" run
+Terminal=false
+NoDisplay=true
+X-GNOME-Autostart-enabled=true
+`, desktopEscaper.Replace(exe))
 }
 
 // RunValue returns the Windows Run-key data: `"<exe>" run` (exe in double quotes).
 func RunValue(exe string) string {
-	panic("not implemented")
+	return `"` + exe + `" run`
 }
 
 // Install registers exe (an absolute path; error otherwise) to start at login. Idempotent.
