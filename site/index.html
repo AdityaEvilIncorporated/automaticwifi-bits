@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>AutoWiFi BITS</title>
+  <style>
+    :root {
+      --bg: #ffffff;
+      --fg: #1b1f23;
+      --muted: #57606a;
+      --border: #d0d7de;
+      --surface: #f6f8fa;
+      --accent: #0969da;
+      --code-bg: #eff1f3;
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg: #0d1117;
+        --fg: #e6edf3;
+        --muted: #8b949e;
+        --border: #30363d;
+        --surface: #161b22;
+        --accent: #58a6ff;
+        --code-bg: #21262d;
+      }
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      padding: 1.5rem 1rem 3rem;
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.6;
+      background: var(--bg);
+      color: var(--fg);
+    }
+    main {
+      max-width: 780px;
+      margin: 0 auto;
+    }
+    h1, h2, h3 { line-height: 1.25; }
+    h1 { margin-bottom: 0.25rem; }
+    h2 {
+      margin-top: 2rem;
+      padding-bottom: 0.3rem;
+      border-bottom: 1px solid var(--border);
+    }
+    p.pitch {
+      margin-top: 0.25rem;
+      color: var(--muted);
+      font-size: 1.05rem;
+    }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    code {
+      font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      font-size: 0.9em;
+      background: var(--code-bg);
+      padding: 0.15em 0.35em;
+      border-radius: 4px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1rem 0;
+      background: var(--surface);
+      border: 1px solid var(--border);
+    }
+    th, td {
+      text-align: left;
+      padding: 0.6rem 0.75rem;
+      border-bottom: 1px solid var(--border);
+    }
+    th { font-weight: 600; }
+    tr:last-child td { border-bottom: none; }
+    ul { padding-left: 1.25rem; }
+    li { margin: 0.35rem 0; }
+    footer {
+      margin-top: 3rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--border);
+      color: var(--muted);
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <h1>AutoWiFi BITS</h1>
+      <p class="pitch">Free, open source, no servers: your ID and password never leave your device except to the campus portal.</p>
+      <p><a href="https://github.com/AdityaEvilIncorporated/automaticwifi-bits">Source code on GitHub</a></p>
+    </header>
+
+    <section>
+      <h2>Downloads</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>Platform</th>
+            <th>File</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>macOS (Apple Silicon &amp; Intel)</td>
+            <td><a href="https://github.com/AdityaEvilIncorporated/automaticwifi-bits/releases/latest/download/autowifi-macos.zip">autowifi-macos.zip</a></td>
+          </tr>
+          <tr>
+            <td>Windows (64-bit x86_64)</td>
+            <td><a href="https://github.com/AdityaEvilIncorporated/automaticwifi-bits/releases/latest/download/autowifi-windows-amd64.zip">autowifi-windows-amd64.zip</a></td>
+          </tr>
+          <tr>
+            <td>Windows (ARM64)</td>
+            <td><a href="https://github.com/AdityaEvilIncorporated/automaticwifi-bits/releases/latest/download/autowifi-windows-arm64.zip">autowifi-windows-arm64.zip</a></td>
+          </tr>
+          <tr>
+            <td>Linux (64-bit x86_64)</td>
+            <td><a href="https://github.com/AdityaEvilIncorporated/automaticwifi-bits/releases/latest/download/autowifi-linux-amd64.tar.gz">autowifi-linux-amd64.tar.gz</a></td>
+          </tr>
+          <tr>
+            <td>Linux (ARM64)</td>
+            <td><a href="https://github.com/AdityaEvilIncorporated/automaticwifi-bits/releases/latest/download/autowifi-linux-arm64.tar.gz">autowifi-linux-arm64.tar.gz</a></td>
+          </tr>
+          <tr>
+            <td>Android (8.0+)</td>
+            <td><a href="https://github.com/AdityaEvilIncorporated/automaticwifi-bits/releases/latest/download/autowifi-bits.apk">autowifi-bits.apk</a></td>
+          </tr>
+          <tr>
+            <td>Checksums</td>
+            <td><a href="https://github.com/AdityaEvilIncorporated/automaticwifi-bits/releases/latest/download/SHA256SUMS.txt">SHA256SUMS.txt</a></td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section>
+      <h2>Setup by platform</h2>
+
+      <h3>macOS</h3>
+      <p>Unzip the archive. Because the app is unsigned, Gatekeeper will block it on first launch: <strong>right-click &rarr; Open</strong> the first time. Then run <code>./autowifi setup</code> and <code>./autowifi autostart on</code> in Terminal. Keychain may ask once per update: choose <strong>Always Allow</strong>.</p>
+
+      <h3>Windows</h3>
+      <p>Unzip the archive. If SmartScreen appears, click <strong>More info &rarr; Run anyway</strong>. Run <code>autowifi.exe</code> and use the tray menu <strong>Set ID and password&hellip;</strong> (<code>autowifi setup</code> also works in a terminal).</p>
+
+      <h3>Linux</h3>
+      <p>Extract with <code>tar -xzf autowifi-linux-*.tar.gz</code>, then run <code>./autowifi setup</code> and <code>./autowifi autostart on</code>. The tray icon requires AppIndicator support; without a Secret Service keyring, credentials are stored in a mode-600 file.</p>
+
+      <h3>Android</h3>
+      <p>Download the APK, allow <strong>Install unknown apps</strong> for your browser, open the app, enter your ID and password, allow notifications, and accept the battery optimisation prompt (recommended).</p>
+
+      <h3>iPhone (iOS)</h3>
+      <p>Follow the <a href="https://github.com/AdityaEvilIncorporated/automaticwifi-bits/blob/main/ios/SHORTCUT_GUIDE.md">iOS Shortcut Guide</a> on GitHub to set up a Personal Automation for campus Wi-Fi.</p>
+    </section>
+
+    <section>
+      <h2>Troubleshooting</h2>
+      <p>If login fails because the portal changed, run <code>autowifi capture</code> while on campus. It prints the portal form fields and TLS details (never values).</p>
+    </section>
+
+    <section>
+      <h2>Campus verification checklist</h2>
+      <ul>
+        <li><code>autowifi capture</code> while the portal shows: portal fields match config defaults, action is <code>/</code>.</li>
+        <li>Certificate: "TLS verified by OS trust store: yes" on macOS, Windows, and Linux; Android logs the same.</li>
+        <li>Wrong-password behaviour: wrong password &rarr; one notification, no retry storm; right password &rarr; silent login.</li>
+        <li>1-hour keepalive: session survives &gt; 1 hour with keepalive.</li>
+        <li>SSIDs: campus SSID names written into <code>ios/SHORTCUT_GUIDE.md</code>; Shortcut tested on an iPhone.</li>
+        <li>If any field differs: update config defaults and re-release.</li>
+      </ul>
+    </section>
+
+    <footer>
+      <p>Not affiliated with BITS Pilani.</p>
+    </footer>
+  </main>
+</body>
+</html>
