@@ -5,7 +5,7 @@ Do routine review actions (merge/reject/take, small follow-up fixes with tests, 
 dev) without asking; report afterwards. Stop only for what CLAUDE.md reserves for a human.
 
 ## Current task
-T14 and T24 done (2026-11-25). No HARD tasks left. Waiting on T32 (worker), then Definition of done.
+All 22 tasks done (2026-11-25). T32 taken over from the worker (PRB-002). Next: Definition of done.
 Earlier: review rounds 1-3 merged everything except T24/T32; T07 done by me (17d553a).
 
 ## Done
@@ -32,9 +32,9 @@ Earlier: review rounds 1-3 merged everything except T24/T32; T07 done by me (17d
 See DECISIONS.md.
 
 ## Next 3 steps
-1. bs-task.py queue: review T32. Its release.yml must call scripts/build-apk.sh with the
-   ANDROID_KEYSTORE_* secrets (blank = debug APK) and APP_VERSION_NAME/APP_VERSION_CODE.
-2. Definition of done: security-reviewer + e2e-runner subagents, TEST_REPORT.md, SHIPPING.md.
+1. Definition of done step 0: security-reviewer subagent on the whole diff since main, e2e-runner
+   for the PLAN.md flows (desktop flows are Go e2e tests; site page via Playwright).
+2. Then the rest of the Definition of done: security-reviewer + e2e-runner subagents, TEST_REPORT.md, SHIPPING.md.
 3. Deploy: GitHub repo, release keystore (bs-secret + Actions secrets), tag, Pages; second-opinion release.
 
 ## Known problems
