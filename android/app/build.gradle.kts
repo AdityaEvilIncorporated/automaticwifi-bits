@@ -1,3 +1,6 @@
+// CI passes unset secrets as empty strings: treat blank as absent.
+fun env(name: String): String? = System.getenv(name)?.takeIf { it.isNotBlank() }
+
 plugins {
     id("com.android.application")
     kotlin("android")
@@ -10,17 +13,17 @@ android {
         applicationId = "io.github.autowifibits.app"
         minSdk = 26
         targetSdk = 35
-        versionCode = (System.getenv("APP_VERSION_CODE") ?: "1").toInt()
-        versionName = System.getenv("APP_VERSION_NAME") ?: "dev"
+        versionCode = env("APP_VERSION_CODE")?.toIntOrNull() ?: 1
+        versionName = env("APP_VERSION_NAME") ?: "dev"
     }
     // Release signing comes from the environment (CI secrets); never from files in the repo.
-    val ks = System.getenv("ANDROID_KEYSTORE_FILE")
+    val ks = env("ANDROID_KEYSTORE_FILE")
     signingConfigs {
         if (ks != null) create("release") {
             storeFile = file(ks)
-            storePassword = System.getenv("ANDROID_KEYSTORE_PASSWORD")
-            keyAlias = System.getenv("ANDROID_KEY_ALIAS")
-            keyPassword = System.getenv("ANDROID_KEY_PASSWORD")
+            storePassword = env("ANDROID_KEYSTORE_PASSWORD")
+            keyAlias = env("ANDROID_KEY_ALIAS")
+            keyPassword = env("ANDROID_KEY_PASSWORD")
         }
     }
     buildTypes {

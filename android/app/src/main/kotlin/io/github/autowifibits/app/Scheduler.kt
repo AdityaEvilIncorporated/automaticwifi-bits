@@ -37,10 +37,18 @@ object Scheduler {
                 .setInputData(CheckWorker.input(Trigger.TIMER)).build())
     }
 
-    /** Run a check as soon as possible (Wi-Fi joined, button pressed, credentials saved). */
+    /**
+     * Run a check as soon as possible (Wi-Fi joined, button pressed, credentials saved). Each
+     * trigger has its own unique work, so a Wi-Fi join can never cancel a pending
+     * CREDS_UPDATED run (which is what clears the rejected flag).
+     */
     fun now(context: Context, trigger: Trigger) {
-        WorkManager.getInstance(context.applicationContext).enqueueUniqueWork(NOW, ExistingWorkPolicy.REPLACE,
+        WorkManager.getInstance(context.applicationContext).enqueueUniqueWork("$NOW-${trigger.name}", ExistingWorkPolicy.REPLACE,
             OneTimeWorkRequestBuilder<CheckWorker>().setInputData(CheckWorker.input(trigger)).build())
+    }
+
+    fun cancelNext(context: Context) {
+        WorkManager.getInstance(context.applicationContext).cancelUniqueWork(NEXT)
     }
 
     /**
@@ -49,13 +57,14 @@ object Scheduler {
      */
     fun afterStep(context: Context, step: Step) {
         val wm = WorkManager.getInstance(context.applicationContext)
-        when (step.outcome) {
-            "logged_in", "keepalive_ok", "portal_error", "form_changed" ->
-                wm.enqueueUniqueWork(NEXT, ExistingWorkPolicy.REPLACE,
-                    OneTimeWorkRequestBuilder<CheckWorker>()
-                        .setInitialDelay(step.nextMs, TimeUnit.MILLISECONDS)
-                        .setInputData(CheckWorker.input(Trigger.TIMER)).build())
-            else -> wm.cancelUniqueWork(NEXT) // online, off campus, paused...: periodic work only
+        val delay = Logic.nextDelayMs(step)
+        if (delay == null) {
+            wm.cancelUniqueWork(NEXT) // periodic work only
+        } else {
+            wm.enqueueUniqueWork(NEXT, ExistingWorkPolicy.REPLACE,
+                OneTimeWorkRequestBuilder<CheckWorker>()
+                    .setInitialDelay(delay, TimeUnit.MILLISECONDS)
+                    .setInputData(CheckWorker.input(Trigger.TIMER)).build())
         }
     }
 }

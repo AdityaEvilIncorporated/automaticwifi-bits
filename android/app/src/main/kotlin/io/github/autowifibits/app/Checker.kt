@@ -11,7 +11,6 @@ import io.github.autowifibits.core.Credentials
 import io.github.autowifibits.core.Engine
 import io.github.autowifibits.core.EnginePorts
 import io.github.autowifibits.core.PortalClient
-import io.github.autowifibits.core.PortalConfig
 import io.github.autowifibits.core.PortalTls
 import io.github.autowifibits.core.Resolver
 import io.github.autowifibits.core.SessionState
@@ -30,8 +29,13 @@ object Checker {
 
     fun wifi(context: Context): Network? {
         val cm = context.getSystemService(ConnectivityManager::class.java)
+        // The physical Wi-Fi: not a VPN running over it, and one that offers internet (a captive
+        // network has INTERNET but not VALIDATED; Wi-Fi Direct / local-only hotspots have neither).
         return cm.allNetworks.firstOrNull { n ->
-            cm.getNetworkCapabilities(n)?.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) == true
+            val c = cm.getNetworkCapabilities(n) ?: return@firstOrNull false
+            c.hasTransport(NetworkCapabilities.TRANSPORT_WIFI) &&
+                c.hasCapability(NetworkCapabilities.NET_CAPABILITY_NOT_VPN) &&
+                c.hasCapability(NetworkCapabilities.NET_CAPABILITY_INTERNET)
         }
     }
 
@@ -40,14 +44,18 @@ object Checker {
         val states = StateStore(app)
         val store = CredentialStore(app)
         val net = wifi(app)
+        val ports = object : EnginePorts {
+            override fun credentials(): Credentials? = store.get()
+            override fun notify(title: String, body: String) = post(app, title, body)
+            override fun now() = System.currentTimeMillis()
+            override fun save(state: SessionState) = states.save(state)
+        }
         val step: Step
         if (net == null) {
-            // No Wi-Fi at all: nothing to log in to (SSIDs are never read).
-            val s = states.load().clearSession().copy(consecutiveFailures = 0)
-            states.save(s)
-            step = Step("off_campus", io.github.autowifibits.core.Backoff.STEADY_MS)
+            // No Wi-Fi: every check is off campus, but through the Engine so its rules still apply.
+            step = Engine(NoWifiPortal, ports, states.load()).run(trigger)
         } else {
-            val cfg = PortalConfig()
+            val cfg = ConfigStore(app).load()
             val portal = PortalClient(
                 cfg,
                 probe = UrlConnectionHttp(open = { net.openConnection(it) }),
@@ -57,12 +65,6 @@ object Checker {
                     try { net.getAllByName(host).isNotEmpty() } catch (_: UnknownHostException) { false }
                 },
             )
-            val ports = object : EnginePorts {
-                override fun credentials(): Credentials? = store.get()
-                override fun notify(title: String, body: String) = post(app, title, body)
-                override fun now() = System.currentTimeMillis()
-                override fun save(state: SessionState) = states.save(state)
-            }
             step = Engine(portal, ports, states.load()).run(trigger)
         }
         states.lastOutcome = step.outcome
@@ -75,8 +77,9 @@ object Checker {
         val states = StateStore(app)
         val net = wifi(app)
         val s = states.load()
+        Scheduler.cancelNext(app) // a queued keepalive must not log straight back in
         if (net != null && s.loggedIn) {
-            val cfg = PortalConfig()
+            val cfg = ConfigStore(app).load()
             val client = PortalClient(cfg, UrlConnectionHttp(open = { net.openConnection(it) }),
                 UrlConnectionHttp(open = { net.openConnection(it) },
                     sslSocketFactory = PortalTls.socketFactory(cfg.portalHost, cfg.pinnedCertSha256)),

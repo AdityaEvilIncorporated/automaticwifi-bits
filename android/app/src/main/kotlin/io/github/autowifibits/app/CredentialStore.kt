@@ -62,10 +62,22 @@ class CredentialStore(context: Context) {
         }
     }
 
+    /** Throws IllegalArgumentException for empty values; recovers once from a broken key. */
     fun set(cr: Credentials) {
+        val plain = CredentialCodec.encode(cr)
+        try {
+            write(plain)
+        } catch (e: java.security.GeneralSecurityException) {
+            // Invalidated or corrupt Keystore entry: start over with a fresh key.
+            KeyStore.getInstance("AndroidKeyStore").apply { load(null) }.deleteEntry(ALIAS)
+            write(plain)
+        }
+    }
+
+    private fun write(plain: ByteArray) {
         val c = Cipher.getInstance(TRANSFORM)
         c.init(Cipher.ENCRYPT_MODE, key())
-        val ct = c.doFinal(CredentialCodec.encode(cr))
+        val ct = c.doFinal(plain)
         prefs.edit()
             .putString("ct", Base64.encodeToString(ct, Base64.NO_WRAP))
             .putString("iv", Base64.encodeToString(c.iv, Base64.NO_WRAP))
