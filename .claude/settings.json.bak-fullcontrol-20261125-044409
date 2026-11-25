@@ -1,0 +1,114 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(git status)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git show:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)",
+      "Bash(git checkout dev)",
+      "Bash(git push origin dev)",
+      "Bash(git push -q origin dev)",
+      "Bash(git restore:*)",
+      "Bash(git stash:*)",
+      "Bash(npm:*)",
+      "Bash(pnpm:*)",
+      "Bash(npx:*)",
+      "Bash(node:*)",
+      "Bash(python:*)",
+      "Bash(python3:*)",
+      "Bash(uv:*)",
+      "Bash(pytest:*)",
+      "Bash(ruff:*)",
+      "Bash(docker compose:*)",
+      "Bash(docker build:*)",
+      "Bash(gh run:*)",
+      "Bash(bash scripts/verify.sh)",
+      "Bash(bash scripts/db.sh:*)",
+      "Bash(bs-env.py:*)",
+      "Bash(notify-human.sh:*)",
+      "Bash(bs-task.py:*)",
+      "Bash(repo-map.py:*)",
+      "Bash(gate.sh:*)",
+      "Bash(bs-secret.sh:*)",
+      "Bash(need-human.sh:*)",
+      "Bash(mail-otp.py:*)",
+      "Bash(deploy-browser.sh:*)",
+      "Bash(gh pr create:*)",
+      "Bash(gh pr view:*)",
+      "Bash(git tag:*)",
+      "mcp__deploybrowser",
+      "Bash(git push origin release-*)",
+      "Bash(second-opinion.sh:*)",
+      "Bash(agy-feature.py:*)"
+    ],
+    "deny": [
+      "Bash(aws:*)",
+      "Bash(chmod -R 777:*)",
+      "Bash(chmod 777:*)",
+      "Bash(chmod a+w:*)",
+      "Bash(curl:* | bash)",
+      "Bash(curl:* | sh)",
+      "Bash(dd:*)",
+      "Bash(fly:*)",
+      "Bash(flyctl:*)",
+      "Bash(gcloud:*)",
+      "Bash(gh api:*)",
+      "Bash(gh auth:*)",
+      "Bash(gh pr merge:*)",
+      "Bash(gh repo:*)",
+      "Bash(gh secret:*)",
+      "Bash(git checkout main)",
+      "Bash(git merge main:*)",
+      "Bash(git push --force:*)",
+      "Bash(git push -f:*)",
+      "Bash(git push origin HEAD:main:*)",
+      "Bash(git push origin main:*)",
+      "Bash(railway:*)",
+      "Bash(rm -rf:*)",
+      "Bash(ssh:*)",
+      "Bash(sudo:*)",
+      "Bash(vercel:*)",
+      "Read(./.env.production)",
+      "Read(~/.agent-secrets/**)",
+      "Read(~/.claude/.credentials.json)",
+      "Read(~/.ssh/**)"
+    ]
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit|NotebookEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOME/bin/path-guard.sh"
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOME/bin/stop-gate.sh",
+            "timeout": 600
+          }
+        ]
+      }
+    ],
+    "StopFailure": [
+      {
+        "matcher": "rate_limit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "$HOME/bin/on-limit.sh"
+          }
+        ]
+      }
+    ]
+  }
+}

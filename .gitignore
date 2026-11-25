@@ -1,0 +1,13 @@
+.env
+.env.*
+!.env.example
+.agent/
+node_modules/
+.venv/
+venv/
+__pycache__/
+tasks/*/PACKET.md
+tasks/*/LAST_REPLY.txt
+reports/gate-*.txt
+test-results/
+playwright-report/
