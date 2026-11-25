@@ -44,7 +44,7 @@ object Classify {
                 return ProbeResult(ProbeKind.FOREIGN)
             }
             val magic = uri.rawQuery ?: ""
-            if (magic.isEmpty()) {
+            if (magic.isEmpty() || readAlnumToken(magic, 0) != magic) {
                 return ProbeResult(ProbeKind.MALFORMED)
             }
             return ProbeResult(ProbeKind.CAPTIVE, magic = magic, magicUrl = "${cfg.portalBase()}/fgtauth?$magic")

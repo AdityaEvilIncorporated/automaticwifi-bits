@@ -1,7 +1,8 @@
 # Handoff
 
 ## Current task
-Planning done; waiting for "approve automaticwifi-bits" (.agent/PLAN_APPROVED).
+Review round 1 done (2026-11-25). Merged: T01 T02 T03 T04 T08 T10 T11 T12 T21 T23 T31.
+Rejected: T30 (Shortcut regex misses the magic after a redirect; Stop step must be required).
 
 ## Done
 - intake read; PLAN.md, ARCHITECTURE.md, SCHEDULE.md, DECISIONS.md written.
@@ -13,17 +14,27 @@ Planning done; waiting for "approve automaticwifi-bits" (.agent/PLAN_APPROVED).
 - TASKS.json (22 tasks) and tasks/<ID>/BRIEF.md for every EASY/MEDIUM task.
 
 ## Half-done
-Nothing.
+- T30 back with workers (note in tasks/T30/BRIEF.md). TestShortcutGuide fails on dev until it merges.
+
+## Supervisor fixes after review (commit "review fixes")
+- creds file store: corrupt JSON -> ErrNotFound, never the json error (it can quote file bytes). Test added.
+- Windows toast uses PowerShell's registered AppUserModelID (unregistered ids are dropped). Untested on Windows: campus/Windows checklist.
+- PROTOCOL 3.1: redirect magic must be [0-9A-Za-z]+ else malformed; new probe.json case; Kotlin fixed. Go T05 must pass it.
+- Kotlin Engine: notifier exceptions caught so state is still saved. Test added.
+- site: macOS 15+ Gatekeeper path (System Settings > Privacy & Security > Open Anyway).
 
 ## Decisions
 See DECISIONS.md.
 
 ## Next 3 steps
-1. After approval: bs-task.py queue; T07 (tlsconf) myself, then second-opinion.sh task T07.
-2. Review worker results as they arrive (T01-T04, T08, T10-T12, T21, T23, T30, T31 run first).
-3. T14 agent/CLI/tray once T06, T08, T09 are merged.
+1. T07 (tlsconf) myself, then second-opinion.sh task T07 (unblocks T06, T13).
+2. bs-task.py queue: review T30 resubmission and T05/T09/T10W/T22 as they arrive.
+3. T14 agent/CLI/tray once T06, T09, T13 are merged. In T14: open update URLs only if they start with https://github.com/.
 
 ## Known problems
+- ParseForms (T04) relies on the html5 tree: a <form> placed directly inside <table> loses its
+  inputs (html5 foster-parenting). Standard FortiGate pages nest the table inside the form, so OK
+  for now; if `capture` on campus shows no fields, switch to a tokenizer-based pass.
 - internal/deps pins modules in go.mod; remove imports there as real packages import them (T14).
 - No Android SDK locally; APK build planned via Docker image in T24.
 - Campus facts (fields, cert trust, SSIDs) unconfirmed by design: campus checklist in PLAN.md.

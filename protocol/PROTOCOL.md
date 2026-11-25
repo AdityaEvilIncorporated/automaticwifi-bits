@@ -58,8 +58,10 @@ bytes replaced). "Portal fgtauth URL" = a URL whose scheme is `https`, host equa
 `portal_host` (case-insensitive), port equals `portal_port`, path is `/fgtauth`.
 
 1. Status 3xx with a `Location`:
-   - Location is a portal fgtauth URL → `captive`, magic = its raw query string.
-   - Location is an fgtauth URL on the right host but empty query → `malformed`.
+   - Location is a portal fgtauth URL whose raw query string is one or more magic characters
+     `[0-9A-Za-z]` → `captive`, magic = that query string.
+   - Location is a portal fgtauth URL with an empty query, or a query with any other character
+     → `malformed`.
    - Anything else → `foreign` (another network's captive portal, or a CDN redirect).
 2. Otherwise search the body for the first occurrence of the literal text
    `https://{portal_host}:{portal_port}/fgtauth?` (host matched case-insensitively; the forms

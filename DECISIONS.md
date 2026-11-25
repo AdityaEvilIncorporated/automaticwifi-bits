@@ -14,3 +14,7 @@
 - 2026-11-25 Release assets have unversioned names so the page can link releases/latest/download/<name>.
 - 2026-11-25 Release repo guess: RELEASE_REPO = AdityaEvilIncorporated/automaticwifi-bits (from the git
   user name); confirmed or changed at deploy time, one file to edit.
+- 2026-11-25 Review: a probe redirect whose fgtauth query is not purely [0-9A-Za-z] is `malformed`
+  (FortiGate magics are hex; anything else means the portal changed). Added to PROTOCOL + probe.json.
+- 2026-11-25 Windows notifications are shown under PowerShell's AppUserModelID instead of registering
+  our own (registration needs a Start-menu shortcut; not worth it for quiet error notices).

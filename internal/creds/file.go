@@ -51,7 +51,8 @@ func (f *fileStore) Get() (Credentials, error) {
 	}
 	var c Credentials
 	if err := json.Unmarshal(b, &c); err != nil {
-		return Credentials{}, err
+		// Never return the JSON error: its message can quote bytes of the file (the password).
+		return Credentials{}, fmt.Errorf("%w: credentials file is not valid JSON", ErrNotFound)
 	}
 	return c, nil
 }

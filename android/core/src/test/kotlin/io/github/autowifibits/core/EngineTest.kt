@@ -108,3 +108,24 @@ class EngineTest {
         assertEquals(1, p.logouts.size)
     }
 }
+
+class EngineNotifierFailureTest {
+    @Test fun throwingNotifierStillSaves() {
+        var saved: SessionState? = null
+        val portal = object : PortalApi {
+            override fun checkOnce(getCreds: () -> Credentials?) = CheckResult(Outcome.REJECTED)
+            override fun keepalive(url: String) = false
+            override fun logout(url: String) {}
+        }
+        val ports = object : EnginePorts {
+            override fun credentials() = Credentials("a", "b")
+            override fun notify(title: String, body: String) = throw SecurityException("no permission")
+            override fun now() = 5_000_000L
+            override fun save(state: SessionState) { saved = state }
+        }
+        val step = Engine(portal, ports, SessionState()).run(Trigger.START)
+        assertEquals(NotifyReason.REJECTED, step.notified)
+        assertTrue(saved!!.credentialsRejected)
+        assertEquals(5_000_000L, saved!!.lastNotificationAtMs)
+    }
+}

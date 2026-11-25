@@ -10,7 +10,8 @@ package notify
 //     (if notify-send is not on PATH: return nil, do nothing)
 //   - windows: powershell.exe -NoProfile -NonInteractive -WindowStyle Hidden -Command <script>
 //     with the script reading $env:AWB_TITLE and $env:AWB_BODY and showing a WinRT toast
-//     (ToastNotificationManager, template ToastText02, app id "AutoWiFi BITS"); the command is
+//     (ToastNotificationManager, template ToastText02, shown under PowerShell's registered AppUserModelID because
+//     Windows drops toasts from unregistered ids); the command is
 //     started with SysProcAttr.HideWindow.
 //
 // Commands time out after 10 s (exec.CommandContext). Errors are returned, not logged.

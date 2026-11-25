@@ -124,7 +124,9 @@ class Engine(private val portal: PortalApi, private val ports: EnginePorts, var 
         val now = ports.now()
         if (!notifyAllowed(state.lastNotificationAtMs, now)) return null
         state = state.copy(lastNotificationAtMs = now)
-        ports.notify("AutoWiFi BITS", reason.body)
+        // A broken notifier (e.g. no POST_NOTIFICATIONS permission) must not abort the run:
+        // the state must still be saved, and it counts as sent (no retry storm).
+        runCatching { ports.notify("AutoWiFi BITS", reason.body) }
         return reason
     }
 

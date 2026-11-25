@@ -10,6 +10,8 @@ import (
 	"time"
 )
 
+// winToastScript shows the toast under PowerShell's AppUserModelID: Windows 10/11 silently
+// drop toasts from an unregistered app id such as "AutoWiFi BITS" (no Start-menu shortcut).
 const winToastScript = `
 [Windows.UI.Notifications.ToastNotificationManager, Windows.UI.Notifications, ContentType = WindowsRuntime] | Out-Null
 [Windows.Data.Xml.Dom.XmlDocument, Windows.Data.Xml.Dom.XmlDocument, ContentType = WindowsRuntime] | Out-Null
@@ -18,7 +20,7 @@ $nodes = $xml.GetElementsByTagName('text')
 $nodes.Item(0).AppendChild($xml.CreateTextNode($env:AWB_TITLE)) | Out-Null
 $nodes.Item(1).AppendChild($xml.CreateTextNode($env:AWB_BODY)) | Out-Null
 $toast = [Windows.UI.Notifications.ToastNotification]::new($xml)
-[Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier('AutoWiFi BITS').Show($toast)
+[Windows.UI.Notifications.ToastNotificationManager]::CreateToastNotifier('{1AC14E77-02E7-4E5D-B744-2EB1AE5198B7}\WindowsPowerShell\v1.0\powershell.exe').Show($toast)
 `
 
 type windowsNotifier struct{}

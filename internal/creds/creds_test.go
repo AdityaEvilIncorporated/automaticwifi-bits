@@ -111,6 +111,15 @@ func TestFileStore(t *testing.T) {
 	}
 }
 
+func TestFileStoreCorruptDoesNotLeak(t *testing.T) {
+	p := filepath.Join(t.TempDir(), "credentials")
+	os.WriteFile(p, []byte(`{"username":"u","password":"Sx3cret`), 0o600)
+	_, err := NewFile(p).Get()
+	if !errors.Is(err, ErrNotFound) || strings.Contains(err.Error(), "Sx3cret") || strings.Contains(err.Error(), "invalid character") {
+		t.Fatalf("err = %v", err)
+	}
+}
+
 func TestNewDefault(t *testing.T) {
 	keyring.MockInit()
 	dir := t.TempDir()

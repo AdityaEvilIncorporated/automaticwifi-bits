@@ -5,6 +5,7 @@
     {"name": "303 redirect to fgtauth", "status": 303, "location": "https://fw.bits-pilani.ac.in:8090/fgtauth?0a1b2c3d4e5f6789", "body": "", "expect": {"kind": "captive", "magic": "0a1b2c3d4e5f6789"}},
     {"name": "302 redirect host uppercase", "status": 302, "location": "https://FW.BITS-PILANI.AC.IN:8090/fgtauth?abc123", "body": "", "expect": {"kind": "captive", "magic": "abc123"}},
     {"name": "redirect to fgtauth with empty query", "status": 302, "location": "https://fw.bits-pilani.ac.in:8090/fgtauth?", "body": "", "expect": {"kind": "malformed", "magic": ""}},
+    {"name": "redirect query with extra parameters is malformed", "status": 302, "location": "https://fw.bits-pilani.ac.in:8090/fgtauth?abc123&x=1", "body": "", "expect": {"kind": "malformed", "magic": ""}},
     {"name": "redirect to other portal", "status": 302, "location": "https://login.example-hotel.com/portal?x=1", "body": "", "expect": {"kind": "foreign", "magic": ""}},
     {"name": "redirect to look-alike host", "status": 302, "location": "https://fw.bits-pilani.ac.in.evil.example:8090/fgtauth?abc123", "body": "", "expect": {"kind": "foreign", "magic": ""}},
     {"name": "redirect to right host wrong port", "status": 302, "location": "https://fw.bits-pilani.ac.in:8443/fgtauth?abc123", "body": "", "expect": {"kind": "foreign", "magic": ""}},
