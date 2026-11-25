@@ -101,10 +101,10 @@
         "T04"
       ],
       "acceptance": "go test ./internal/portal/ -count=1 -run 'TestClassifyProbe|TestParseLoginPage|TestClassifyLoginReply|TestKeepaliveSharedCases|TestOnPortal'",
-      "status": "todo",
-      "owner": "",
+      "status": "doing",
+      "owner": "agy-agent",
       "attempts": 0,
-      "rung": 0,
+      "rung": 1,
       "files": [
         "internal/portal/classify.go"
       ],
@@ -212,10 +212,10 @@
         "T08"
       ],
       "acceptance": "go test ./internal/engine/ -count=1",
-      "status": "todo",
-      "owner": "",
+      "status": "doing",
+      "owner": "agy-agent",
       "attempts": 0,
-      "rung": 0,
+      "rung": 1,
       "files": [
         "internal/engine/engine.go"
       ],
@@ -513,7 +513,7 @@
       "size": 2,
       "depends": [],
       "acceptance": "go test ./internal/docscheck/ -count=1 -run TestShortcutGuide",
-      "status": "review",
+      "status": "done",
       "attempts": 0,
       "rung": 0,
       "files": [
@@ -528,7 +528,7 @@
       ],
       "example": null,
       "recipe": null,
-      "owner": "gemini-patch"
+      "owner": "supervisor"
     },
     {
       "id": "T31",
