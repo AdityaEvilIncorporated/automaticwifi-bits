@@ -10,5 +10,14 @@ const Steady = 5 * time.Minute
 // 1 → 5s, 2 → 15s, 3 → 60s, 4 or more → Steady. failures <= 0 → Steady (nothing failed,
 // so just the periodic check).
 func Delay(failures int) time.Duration {
-	panic("not implemented")
+	switch failures {
+	case 1:
+		return 5 * time.Second
+	case 2:
+		return 15 * time.Second
+	case 3:
+		return 60 * time.Second
+	default:
+		return Steady
+	}
 }

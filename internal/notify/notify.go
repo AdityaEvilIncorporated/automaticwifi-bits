@@ -31,7 +31,20 @@ type Notifier interface {
 //
 // An unknown reason returns the title and "AutoWiFi BITS needs attention."
 func Message(r Reason) (title, body string) {
-	panic("not implemented")
+	title = "AutoWiFi BITS"
+	switch r {
+	case ReasonRejected:
+		body = "Campus Wi-Fi login was rejected. Update your ID and password to resume."
+	case ReasonRepeatedErrors:
+		body = "Campus Wi-Fi login keeps failing. Will keep retrying every 5 minutes."
+	case ReasonFormChanged:
+		body = "The campus login page has changed. Run 'autowifi capture' and report it."
+	case ReasonNoCredentials:
+		body = "Campus Wi-Fi needs a login. Set your ID and password in AutoWiFi BITS."
+	default:
+		body = "AutoWiFi BITS needs attention."
+	}
+	return title, body
 }
 
 // Allow reports whether a notification may be sent at now, given the time of the last one
@@ -39,7 +52,10 @@ func Message(r Reason) (title, body string) {
 // future (clock moved back) also returns true, so a clock change can never silence
 // notifications forever.
 func Allow(last, now time.Time) bool {
-	panic("not implemented")
+	if last.IsZero() || last.After(now) {
+		return true
+	}
+	return now.Sub(last) >= MinInterval
 }
 
 // Nop is a Notifier that does nothing (used when notifications are unavailable).
