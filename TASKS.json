@@ -564,7 +564,7 @@
         "T14"
       ],
       "acceptance": "bash scripts/build-release.sh v0.0.1-test && bash scripts/check-dist.sh v0.0.1-test",
-      "status": "NEEDS_SUPERVISOR",
+      "status": "doing",
       "owner": "supervisor",
       "attempts": 0,
       "rung": 3,

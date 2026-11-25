@@ -1,0 +1,109 @@
+# Builds and publishes a GitHub Release for a v* tag: Android APK (signed with the release key
+# from secrets), desktop binaries for macOS/Windows/Linux, and SHA256SUMS.txt. Every test suite
+# runs first; nothing is published if one fails.
+#
+# Secrets (repository settings, never in the repo):
+#   ANDROID_KEYSTORE_BASE64   base64 of the release .jks
+#   ANDROID_KEYSTORE_PASSWORD, ANDROID_KEY_ALIAS, ANDROID_KEY_PASSWORD
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  apk:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+      - uses: android-actions/setup-android@v3
+
+      - name: Kotlin core tests (shared cases + mock portal)
+        run: |
+          mkdir -p .build
+          CGO_ENABLED=0 go build -o .build/mockportal ./cmd/mockportal
+          cd android
+          MOCKPORTAL_BIN="$PWD/../.build/mockportal" ./gradlew --no-daemon -q :core:test
+
+      - name: Release signing key
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+        run: |
+          if [ -z "$ANDROID_KEYSTORE_BASE64" ]; then
+            echo "::error::ANDROID_KEYSTORE_BASE64 is not set: refusing to publish a debug-signed APK"
+            exit 1
+          fi
+          printf '%s' "$ANDROID_KEYSTORE_BASE64" | base64 -d > "$RUNNER_TEMP/release.jks"
+          echo "ANDROID_KEYSTORE_FILE=$RUNNER_TEMP/release.jks" >> "$GITHUB_ENV"
+
+      - name: Build APK (app unit tests + lint + signed release)
+        env:
+          ANDROID_KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          ANDROID_KEY_ALIAS: ${{ secrets.ANDROID_KEY_ALIAS }}
+          ANDROID_KEY_PASSWORD: ${{ secrets.ANDROID_KEY_PASSWORD }}
+          APP_VERSION_NAME: ${{ github.ref_name }}
+        run: |
+          v="${GITHUB_REF_NAME#v}"; v="${v%%-*}"
+          IFS=. read -r major minor patch <<< "$v"
+          export APP_VERSION_CODE=$(( major * 10000 + minor * 100 + patch ))
+          bash scripts/build-apk.sh
+
+      - name: Remove the signing key
+        if: always()
+        run: rm -f "$RUNNER_TEMP/release.jks"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: apk
+          path: dist/autowifi-bits.apk
+          if-no-files-found: error
+          retention-days: 7
+
+  desktop:
+    needs: apk
+    runs-on: macos-latest
+    permissions:
+      contents: write # gh release create
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - name: Go tests
+        run: go test -race -count=1 ./...
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: apk
+          path: dist
+
+      - name: Build desktop assets
+        run: bash scripts/build-release.sh "$GITHUB_REF_NAME"
+
+      - name: Check assets
+        run: |
+          bash scripts/check-dist.sh "$GITHUB_REF_NAME"
+          grep -q ' autowifi-bits.apk$' dist/SHA256SUMS.txt
+
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          pre=""
+          case "$GITHUB_REF_NAME" in *-*) pre="--prerelease" ;; esac
+          gh release create "$GITHUB_REF_NAME" dist/* --verify-tag --generate-notes $pre

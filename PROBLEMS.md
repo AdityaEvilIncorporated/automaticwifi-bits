@@ -18,3 +18,9 @@ a trap that is already solved. Keep each entry short; newest at the bottom.
 - Fix / rule: workers do nothing differently. Supervisor: when a gate failure names another task's
   acceptance command, requeue (status=todo attempts=0) instead of rejecting; the new attempt starts
   from the latest dev. Long-term fix belongs in the orchestrator (rebase worktree on dev before the gate).
+
+## PRB-002: gate "changed files outside this task" for build outputs
+- Seen in: T32 (twice), 2026-11-25
+- Cause: the acceptance command writes dist/*, which was not in .gitignore yet.
+- Fix / rule: dist/ is now ignored. Any task whose acceptance builds artefacts must write them to
+  an ignored directory (dist/, .build/); never commit build outputs.
