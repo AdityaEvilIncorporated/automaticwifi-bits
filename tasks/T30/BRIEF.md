@@ -27,3 +27,7 @@ No database in this project. Tests use temp dirs (`t.TempDir()`), the in-process
 - touch files not listed in TASKS.json `files`
 - log, print or put into errors any password, username, magic or token
 - leave `panic("not implemented")`/`TODO(...)` in the functions you own
+
+
+## Supervisor feedback
+Step 4 breaks in the common case: Get Contents of URL FOLLOWS redirects, so when the firewall answers the probe with a 303 to fgtauth, the text Shortcuts receives is the login FORM page, which normally does not contain 'fgtauth?<magic>'; the magic is only in <input type="hidden" name="magic" value="...">. Fix: (1) Match Text pattern must be  (?:fgtauth\?|name="magic" value=")([0-9A-Za-z]+)  and explain both cases (redirect -> form page with hidden magic input; 200 JS page -> fgtauth?<magic> in the text); keep the literal [0-9A-Za-z]+ in the text. (2) The If/Stop step is REQUIRED, not optional: if Matches has no value, Stop This Shortcut, before any request is sent to the portal, so credentials are never POSTed when already online or off campus. (3) Step 6 (GET fgtauth form) may stay but say it is only needed when the probe was the JS page; it is harmless otherwise. (4) Update the Troubleshooting redirect bullet to match. Keep all other content; TestShortcutGuide must still pass.
