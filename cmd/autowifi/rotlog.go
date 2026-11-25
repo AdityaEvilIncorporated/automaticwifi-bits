@@ -41,8 +41,14 @@ func (w *rotWriter) open() error {
 func (w *rotWriter) Write(b []byte) (int, error) {
 	w.mu.Lock()
 	defer w.mu.Unlock()
+	if w.f == nil { // a previous reopen failed: try again
+		if err := w.open(); err != nil {
+			return 0, err
+		}
+	}
 	if w.size+int64(len(b)) > w.max && w.size > 0 {
 		w.f.Close()
+		w.f = nil
 		_ = os.Rename(w.path, w.path+".1")
 		if err := w.open(); err != nil {
 			return 0, err
@@ -56,5 +62,8 @@ func (w *rotWriter) Write(b []byte) (int, error) {
 func (w *rotWriter) Close() error {
 	w.mu.Lock()
 	defer w.mu.Unlock()
+	if w.f == nil {
+		return nil
+	}
 	return w.f.Close()
 }

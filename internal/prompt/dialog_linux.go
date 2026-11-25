@@ -5,6 +5,7 @@ package prompt
 import (
 	"context"
 	"errors"
+	"os"
 	"os/exec"
 	"strings"
 	"time"
@@ -30,6 +31,9 @@ func dialog() (creds.Credentials, error) {
 	defer cancel()
 	var user, pw string
 	var err error
+	if os.Getenv("DISPLAY") == "" && os.Getenv("WAYLAND_DISPLAY") == "" {
+		return creds.Credentials{}, ErrNoDialog // e.g. over SSH: zenity would fail, not be cancelled
+	}
 	switch {
 	case lookPath("zenity"):
 		if user, err = run(exec.CommandContext(ctx, "zenity", "--entry", "--title="+Title, "--text=BITS campus ID:")); err == nil {

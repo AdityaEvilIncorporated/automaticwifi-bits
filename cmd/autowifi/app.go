@@ -327,6 +327,10 @@ func cmdStatus(e *env, p paths) int {
 		return "no"
 	}
 	_, credErr := e.store.Get()
+	stored := yes(credErr == nil)
+	if credErr != nil && !errors.Is(credErr, creds.ErrNotFound) {
+		stored = "unknown (" + credErr.Error() + ")"
+	}
 	running := false
 	if release, ok, err := acquireLock(p.lock); err == nil {
 		if ok {
@@ -341,7 +345,7 @@ func cmdStatus(e *env, p paths) int {
 		last = strings.TrimSpace(string(b))
 	}
 	fmt.Fprintf(e.stdout, "Agent running: %s\nStart at login: %s\nID and password stored: %s\nCredentials rejected: %s\nPortal session: %s\nLast check: %s\nConfig: %s\nVersion: %s\n",
-		yes(running), yes(auto), yes(credErr == nil), yes(st.CredentialsRejected), yes(st.LoggedIn()), last, p.config, version)
+		yes(running), yes(auto), stored, yes(st.CredentialsRejected), yes(st.LoggedIn()), last, p.config, version)
 	return 0
 }
 
@@ -405,7 +409,11 @@ func cmdRun(e *env, p paths, rest []string) int {
 	if !firstRun {
 		// nothing to ask
 	} else if _, err := e.store.Get(); errors.Is(err, creds.ErrNotFound) {
-		if c, err := askCredentials(e); err == nil {
+		if c, err := askCredentials(e); err != nil {
+			if !errors.Is(err, prompt.ErrCancelled) {
+				logf("first-run credential prompt: %v", err)
+			}
+		} else {
 			if err := e.store.Set(c); err != nil {
 				logf("store credentials: %v", err)
 			} else if e.exe != "" {
@@ -481,6 +489,7 @@ func cmdRun(e *env, p paths, rest []string) int {
 				}
 				if err := e.store.Set(c); err != nil {
 					logf("store credentials: %v", err)
+					_ = e.notifier.Notify("AutoWiFi BITS", "Your ID and password could not be saved in the OS secure store.")
 					return
 				}
 				a.Kick(engine.TriggerCredsUpdated)
@@ -492,10 +501,17 @@ func cmdRun(e *env, p paths, rest []string) int {
 			return on
 		},
 		SetAutostart: func(on bool) error {
+			var err error
 			if on {
-				return e.autostartOn(e.home, e.exe)
+				err = e.autostartOn(e.home, e.exe)
+			} else {
+				err = e.autostartOff(e.home)
 			}
-			return e.autostartOff(e.home)
+			if err != nil {
+				logf("start at login: %v", err)
+				_ = e.notifier.Notify("AutoWiFi BITS", "Could not change start at login. Try 'autowifi autostart on' in a terminal.")
+			}
+			return err
 		},
 	}, func(t *tray.Tray) {
 		trMu.Lock()
@@ -505,6 +521,9 @@ func cmdRun(e *env, p paths, rest []string) int {
 			t.SetStatus(lastStatus)
 		}
 	})
+	trMu.Lock()
+	tr = nil // the native menu is gone; late callbacks must not touch it
+	trMu.Unlock()
 	cancel()
 	<-done
 	logf("agent stopped")

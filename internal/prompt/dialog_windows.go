@@ -4,6 +4,7 @@ package prompt
 
 import (
 	"context"
+	"errors"
 	"os/exec"
 	"syscall"
 	"time"
@@ -25,6 +26,10 @@ func dialog() (creds.Credentials, error) {
 	cmd := exec.CommandContext(ctx, "powershell.exe", "-NoProfile", "-Command", credScript)
 	cmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true}
 	out, err := cmd.Output()
+	var ee *exec.ExitError
+	if errors.As(err, &ee) {
+		return creds.Credentials{}, ErrCancelled // Cancel in Get-Credential ends PowerShell with an error
+	}
 	if err != nil {
 		return creds.Credentials{}, err
 	}

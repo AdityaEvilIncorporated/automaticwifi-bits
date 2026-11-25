@@ -21,6 +21,7 @@ import (
 	"os"
 	"os/signal"
 	"runtime"
+	"strings"
 	"syscall"
 )
 
@@ -40,8 +41,14 @@ func main() {
 	if len(args) > 0 && args[0] != "run" {
 		attachConsole() // Windows GUI build: print to the terminal that started us
 	}
-	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
-	defer stop()
+	ctx := context.Background()
+	if len(args) == 0 || args[0] == "run" || strings.HasPrefix(args[0], "-") {
+		// Only the agent traps Ctrl-C/SIGTERM (to log out of nothing and exit cleanly); other
+		// commands keep the default so Ctrl-C at the setup prompt exits at once.
+		var stop context.CancelFunc
+		ctx, stop = signal.NotifyContext(ctx, os.Interrupt, syscall.SIGTERM)
+		defer stop()
+	}
 	e, err := osEnv(ctx)
 	if err != nil {
 		os.Stderr.WriteString("autowifi: " + err.Error() + "\n")

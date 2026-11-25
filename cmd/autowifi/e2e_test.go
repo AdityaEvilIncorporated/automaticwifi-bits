@@ -355,3 +355,24 @@ func TestSetupUnpausesRunningAgent(t *testing.T) {
 	cancel()
 	<-done
 }
+
+func TestRotWriterRecoversAfterFailedReopen(t *testing.T) {
+	dir := t.TempDir()
+	p := filepath.Join(dir, "x.log")
+	w, err := newRotWriter(p, 4)
+	if err != nil {
+		t.Fatal(err)
+	}
+	w.Write([]byte("abcd"))
+	os.Chmod(dir, 0o500) // rotation cannot create the new file
+	if _, err := w.Write([]byte("efgh")); err == nil {
+		t.Log("platform allowed the write; nothing to recover")
+	}
+	os.Chmod(dir, 0o700)
+	if _, err := w.Write([]byte("ijkl")); err != nil {
+		t.Fatalf("no recovery after the directory became writable: %v", err)
+	}
+	if err := w.Close(); err != nil {
+		t.Fatal(err)
+	}
+}
