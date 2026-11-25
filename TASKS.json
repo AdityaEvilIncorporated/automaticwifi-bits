@@ -269,7 +269,7 @@
         "T10"
       ],
       "acceptance": "GOOS=windows go vet ./internal/autostart/ && GOOS=windows go build ./internal/autostart/",
-      "status": "review",
+      "status": "done",
       "owner": "gemini-patch",
       "attempts": 1,
       "rung": 0,
@@ -430,7 +430,7 @@
         "T21"
       ],
       "acceptance": "bash scripts/test-android.sh --tests '*UrlConnectionHttpTest*' --tests '*ScenariosTest*'",
-      "status": "doing",
+      "status": "review",
       "owner": "agy-agent",
       "attempts": 0,
       "rung": 1,
@@ -513,7 +513,7 @@
       "size": 2,
       "depends": [],
       "acceptance": "go test ./internal/docscheck/ -count=1 -run TestShortcutGuide",
-      "status": "review",
+      "status": "doing",
       "attempts": 0,
       "rung": 0,
       "files": [
