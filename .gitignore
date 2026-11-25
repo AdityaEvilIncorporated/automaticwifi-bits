@@ -11,3 +11,7 @@ tasks/*/LAST_REPLY.txt
 reports/gate-*.txt
 test-results/
 playwright-report/
+.build/
+android/.gradle/
+android/**/build/
+android/local.properties

@@ -1,1 +1,589 @@
-{"project":"automaticwifi-bits","tasks":[]}
+{
+ "project": "automaticwifi-bits",
+ "tasks": [
+  {
+   "id": "T01",
+   "title": "PortalConfig defaults, validation, load/save",
+   "tier": "EASY",
+   "size": 2,
+   "depends": [],
+   "acceptance": "go test ./internal/config/ -count=1",
+   "status": "todo",
+   "owner": null,
+   "attempts": 0,
+   "rung": 0,
+   "files": [
+    "internal/config/config.go"
+   ],
+   "tests": [
+    "internal/config/config_test.go"
+   ],
+   "context": [
+    "protocol/PROTOCOL.md"
+   ],
+   "example": null,
+   "recipe": null
+  },
+  {
+   "id": "T02",
+   "title": "SessionState persistence",
+   "tier": "EASY",
+   "size": 1,
+   "depends": [],
+   "acceptance": "go test ./internal/state/ -count=1",
+   "status": "todo",
+   "owner": null,
+   "attempts": 0,
+   "rung": 0,
+   "files": [
+    "internal/state/state.go"
+   ],
+   "tests": [
+    "internal/state/state_test.go"
+   ],
+   "context": [],
+   "example": null,
+   "recipe": null
+  },
+  {
+   "id": "T03",
+   "title": "Backoff schedule, notification texts and hourly limit",
+   "tier": "EASY",
+   "size": 1,
+   "depends": [],
+   "acceptance": "go test ./internal/backoff/ ./internal/notify/ -count=1 -run 'TestDelay|TestMessage|TestAllow'",
+   "status": "todo",
+   "owner": null,
+   "attempts": 0,
+   "rung": 0,
+   "files": [
+    "internal/backoff/backoff.go",
+    "internal/notify/notify.go"
+   ],
+   "tests": [
+    "internal/backoff/backoff_test.go",
+    "internal/notify/notify_test.go"
+   ],
+   "context": [
+    "protocol/PROTOCOL.md"
+   ],
+   "example": null,
+   "recipe": null
+  },
+  {
+   "id": "T04",
+   "title": "HTML form parser",
+   "tier": "EASY",
+   "size": 2,
+   "depends": [],
+   "acceptance": "go test ./internal/portal/ -count=1 -run 'TestParseForms'",
+   "status": "todo",
+   "owner": null,
+   "attempts": 0,
+   "rung": 0,
+   "files": [
+    "internal/portal/form.go"
+   ],
+   "tests": [
+    "internal/portal/form_test.go"
+   ],
+   "context": [],
+   "example": null,
+   "recipe": null
+  },
+  {
+   "id": "T05",
+   "title": "Protocol classifiers (probe, login page, login reply, keepalive, host rule)",
+   "tier": "MEDIUM",
+   "size": 3,
+   "depends": [
+    "T01",
+    "T04"
+   ],
+   "acceptance": "go test ./internal/portal/ -count=1 -run 'TestClassifyProbe|TestParseLoginPage|TestClassifyLoginReply|TestKeepaliveSharedCases|TestOnPortal'",
+   "status": "todo",
+   "owner": null,
+   "attempts": 0,
+   "rung": 0,
+   "files": [
+    "internal/portal/classify.go"
+   ],
+   "tests": [
+    "internal/portal/classify_test.go",
+    "internal/portal/testcases_test.go"
+   ],
+   "context": [
+    "protocol/PROTOCOL.md",
+    "protocol/testcases/probe.json",
+    "protocol/testcases/login_page.json",
+    "protocol/testcases/login_reply.json",
+    "protocol/testcases/keepalive.json",
+    "internal/portal/form.go",
+    "internal/config/config.go"
+   ],
+   "example": null,
+   "recipe": null
+  },
+  {
+   "id": "T06",
+   "title": "Portal network client (probe, login, check, keepalive, logout)",
+   "tier": "MEDIUM",
+   "size": 4,
+   "depends": [
+    "T05",
+    "T07"
+   ],
+   "acceptance": "go test ./internal/portal/ -count=1 -run 'TestScenarios|TestCheckOnce|TestOnCampus|TestCredentialsReadOnly|TestCredsGet|TestProbe|TestLogin|TestKeepaliveAndLogout|TestMagic'",
+   "status": "todo",
+   "owner": null,
+   "attempts": 0,
+   "rung": 0,
+   "files": [
+    "internal/portal/client.go"
+   ],
+   "tests": [
+    "internal/portal/client_test.go"
+   ],
+   "context": [
+    "protocol/PROTOCOL.md",
+    "protocol/testcases/scenarios.json",
+    "internal/portal/classify.go",
+    "internal/mockportal/mockportal.go",
+    "internal/tlsconf/tlsconf.go",
+    "internal/creds/creds.go"
+   ],
+   "example": null,
+   "recipe": null
+  },
+  {
+   "id": "T07",
+   "title": "Portal TLS: trust store then host-bound SPKI pin, Inspect",
+   "tier": "HARD",
+   "size": 2,
+   "depends": [],
+   "acceptance": "go test ./internal/tlsconf/ -count=1",
+   "status": "todo",
+   "owner": null,
+   "attempts": 0,
+   "rung": 0,
+   "files": [
+    "internal/tlsconf/tlsconf.go"
+   ],
+   "tests": [
+    "internal/tlsconf/tlsconf_test.go"
+   ],
+   "context": [
+    "protocol/PROTOCOL.md"
+   ],
+   "example": null,
+   "recipe": null
+  },
+  {
+   "id": "T08",
+   "title": "Credential stores: keyring, file fallback, memory, NewDefault",
+   "tier": "MEDIUM",
+   "size": 3,
+   "depends": [],
+   "acceptance": "go test ./internal/creds/ -count=1",
+   "status": "todo",
+   "owner": null,
+   "attempts": 0,
+   "rung": 0,
+   "files": [
+    "internal/creds/creds.go",
+    "internal/creds/keyring.go",
+    "internal/creds/file.go"
+   ],
+   "tests": [
+    "internal/creds/creds_test.go"
+   ],
+   "context": [],
+   "example": null,
+   "recipe": null
+  },
+  {
+   "id": "T09",
+   "title": "Engine decision logic",
+   "tier": "MEDIUM",
+   "size": 3,
+   "depends": [
+    "T02",
+    "T03",
+    "T08"
+   ],
+   "acceptance": "go test ./internal/engine/ -count=1",
+   "status": "todo",
+   "owner": null,
+   "attempts": 0,
+   "rung": 0,
+   "files": [
+    "internal/engine/engine.go"
+   ],
+   "tests": [
+    "internal/engine/engine_test.go"
+   ],
+   "context": [
+    "protocol/PROTOCOL.md",
+    "internal/state/state.go",
+    "internal/backoff/backoff.go",
+    "internal/notify/notify.go",
+    "internal/portal/classify.go",
+    "internal/portal/client.go",
+    "internal/creds/creds.go"
+   ],
+   "example": null,
+   "recipe": null
+  },
+  {
+   "id": "T10",
+   "title": "Autostart: file generators, macOS LaunchAgent, Linux XDG",
+   "tier": "MEDIUM",
+   "size": 3,
+   "depends": [],
+   "acceptance": "go test ./internal/autostart/ -count=1 && GOOS=linux go test -c -o /dev/null ./internal/autostart/",
+   "status": "todo",
+   "owner": null,
+   "attempts": 0,
+   "rung": 0,
+   "files": [
+    "internal/autostart/autostart.go",
+    "internal/autostart/autostart_darwin.go",
+    "internal/autostart/autostart_linux.go"
+   ],
+   "tests": [
+    "internal/autostart/autostart_test.go",
+    "internal/autostart/autostart_unix_test.go",
+    "internal/autostart/stub_darwin_test.go",
+    "internal/autostart/stub_linux_test.go"
+   ],
+   "context": [],
+   "example": null,
+   "recipe": null
+  },
+  {
+   "id": "T10W",
+   "title": "Autostart: Windows Run key",
+   "tier": "EASY",
+   "size": 1,
+   "depends": [
+    "T10"
+   ],
+   "acceptance": "GOOS=windows go vet ./internal/autostart/ && GOOS=windows go build ./internal/autostart/",
+   "status": "todo",
+   "owner": null,
+   "attempts": 0,
+   "rung": 0,
+   "files": [
+    "internal/autostart/autostart_windows.go"
+   ],
+   "tests": [],
+   "context": [
+    "internal/autostart/autostart.go"
+   ],
+   "example": null,
+   "recipe": null
+  },
+  {
+   "id": "T11",
+   "title": "OS notifiers (osascript, notify-send, WinRT toast)",
+   "tier": "MEDIUM",
+   "size": 2,
+   "depends": [],
+   "acceptance": "go test ./internal/notify/ -count=1 -run TestNewSystemNotNil && GOOS=linux go vet ./internal/notify/ && GOOS=windows go vet ./internal/notify/",
+   "status": "todo",
+   "owner": null,
+   "attempts": 0,
+   "rung": 0,
+   "files": [
+    "internal/notify/system_darwin.go",
+    "internal/notify/system_linux.go",
+    "internal/notify/system_windows.go"
+   ],
+   "tests": [],
+   "context": [
+    "internal/notify/system.go",
+    "internal/notify/notify.go"
+   ],
+   "example": null,
+   "recipe": null
+  },
+  {
+   "id": "T12",
+   "title": "GitHub latest-release check",
+   "tier": "EASY",
+   "size": 1,
+   "depends": [],
+   "acceptance": "go test ./internal/update/ -count=1",
+   "status": "todo",
+   "owner": null,
+   "attempts": 0,
+   "rung": 0,
+   "files": [
+    "internal/update/update.go"
+   ],
+   "tests": [
+    "internal/update/update_test.go"
+   ],
+   "context": [],
+   "example": null,
+   "recipe": null
+  },
+  {
+   "id": "T13",
+   "title": "Capture diagnostic",
+   "tier": "MEDIUM",
+   "size": 3,
+   "depends": [
+    "T06",
+    "T07"
+   ],
+   "acceptance": "go test ./internal/portal/ -count=1 -run 'TestCapture'",
+   "status": "todo",
+   "owner": null,
+   "attempts": 0,
+   "rung": 0,
+   "files": [
+    "internal/portal/capture.go"
+   ],
+   "tests": [
+    "internal/portal/capture_test.go"
+   ],
+   "context": [
+    "protocol/PROTOCOL.md",
+    "internal/portal/client.go",
+    "internal/portal/form.go",
+    "internal/portal/classify.go",
+    "internal/tlsconf/tlsconf.go",
+    "internal/mockportal/mockportal.go"
+   ],
+   "example": null,
+   "recipe": null
+  },
+  {
+   "id": "T14",
+   "title": "Desktop agent, CLI, tray, credential dialogs, single instance, e2e test",
+   "tier": "HARD",
+   "size": 5,
+   "depends": [
+    "T06",
+    "T08",
+    "T09",
+    "T10",
+    "T10W",
+    "T11",
+    "T12",
+    "T13"
+   ],
+   "acceptance": "go test ./cmd/autowifi/ ./internal/agent/ -count=1",
+   "status": "todo",
+   "owner": null,
+   "attempts": 0,
+   "rung": 0,
+   "files": [
+    "cmd/autowifi/",
+    "internal/agent/",
+    "internal/tray/",
+    "internal/prompt/"
+   ],
+   "tests": [],
+   "context": [
+    "ARCHITECTURE.md"
+   ],
+   "example": null,
+   "recipe": null
+  },
+  {
+   "id": "T21",
+   "title": "Kotlin PortalConfig and Classify (shared cases)",
+   "tier": "MEDIUM",
+   "size": 3,
+   "depends": [],
+   "acceptance": "bash scripts/test-android.sh --tests '*SharedCasesTest*'",
+   "status": "todo",
+   "owner": null,
+   "attempts": 0,
+   "rung": 0,
+   "files": [
+    "android/core/src/main/kotlin/io/github/autowifibits/core/PortalConfig.kt",
+    "android/core/src/main/kotlin/io/github/autowifibits/core/Classify.kt"
+   ],
+   "tests": [
+    "android/core/src/test/kotlin/io/github/autowifibits/core/SharedCasesTest.kt"
+   ],
+   "context": [
+    "protocol/PROTOCOL.md",
+    "protocol/testcases/probe.json",
+    "protocol/testcases/login_page.json",
+    "protocol/testcases/login_reply.json",
+    "protocol/testcases/keepalive.json",
+    "android/core/build.gradle.kts"
+   ],
+   "example": "internal/portal/classify.go",
+   "recipe": null
+  },
+  {
+   "id": "T22",
+   "title": "Kotlin UrlConnectionHttp and PortalClient",
+   "tier": "MEDIUM",
+   "size": 4,
+   "depends": [
+    "T21"
+   ],
+   "acceptance": "bash scripts/test-android.sh --tests '*UrlConnectionHttpTest*' --tests '*ScenariosTest*'",
+   "status": "todo",
+   "owner": null,
+   "attempts": 0,
+   "rung": 0,
+   "files": [
+    "android/core/src/main/kotlin/io/github/autowifibits/core/UrlConnectionHttp.kt",
+    "android/core/src/main/kotlin/io/github/autowifibits/core/PortalClient.kt"
+   ],
+   "tests": [
+    "android/core/src/test/kotlin/io/github/autowifibits/core/UrlConnectionHttpTest.kt",
+    "android/core/src/test/kotlin/io/github/autowifibits/core/ScenariosTest.kt",
+    "android/core/src/test/kotlin/io/github/autowifibits/core/MockPortal.kt"
+   ],
+   "context": [
+    "protocol/PROTOCOL.md",
+    "protocol/testcases/scenarios.json",
+    "android/core/src/main/kotlin/io/github/autowifibits/core/Http.kt",
+    "android/core/src/main/kotlin/io/github/autowifibits/core/Classify.kt",
+    "android/core/src/main/kotlin/io/github/autowifibits/core/PortalConfig.kt",
+    "internal/mockportal/mockportal.go"
+   ],
+   "example": "internal/portal/client.go",
+   "recipe": null
+  },
+  {
+   "id": "T23",
+   "title": "Kotlin Engine, Backoff, notifyAllowed",
+   "tier": "MEDIUM",
+   "size": 3,
+   "depends": [],
+   "acceptance": "bash scripts/test-android.sh --tests '*EngineTest*'",
+   "status": "todo",
+   "owner": null,
+   "attempts": 0,
+   "rung": 0,
+   "files": [
+    "android/core/src/main/kotlin/io/github/autowifibits/core/Engine.kt"
+   ],
+   "tests": [
+    "android/core/src/test/kotlin/io/github/autowifibits/core/EngineTest.kt"
+   ],
+   "context": [
+    "internal/engine/engine.go",
+    "android/core/src/main/kotlin/io/github/autowifibits/core/PortalClient.kt",
+    "android/core/src/main/kotlin/io/github/autowifibits/core/Classify.kt"
+   ],
+   "example": "internal/engine/engine.go",
+   "recipe": null
+  },
+  {
+   "id": "T24",
+   "title": "Android app, PortalTls, Keystore credentials, APK build",
+   "tier": "HARD",
+   "size": 5,
+   "depends": [
+    "T21",
+    "T22",
+    "T23"
+   ],
+   "acceptance": "bash scripts/test-android.sh && bash scripts/build-apk.sh",
+   "status": "todo",
+   "owner": null,
+   "attempts": 0,
+   "rung": 0,
+   "files": [
+    "android/app/",
+    "android/core/src/main/kotlin/io/github/autowifibits/core/PortalTls.kt",
+    "scripts/build-apk.sh"
+   ],
+   "tests": [],
+   "context": [
+    "ARCHITECTURE.md"
+   ],
+   "example": null,
+   "recipe": null
+  },
+  {
+   "id": "T30",
+   "title": "iOS Shortcut guide",
+   "tier": "EASY",
+   "size": 2,
+   "depends": [],
+   "acceptance": "go test ./internal/docscheck/ -count=1 -run TestShortcutGuide",
+   "status": "todo",
+   "owner": null,
+   "attempts": 0,
+   "rung": 0,
+   "files": [
+    "ios/SHORTCUT_GUIDE.md"
+   ],
+   "tests": [
+    "internal/docscheck/docs_test.go"
+   ],
+   "context": [
+    "protocol/PROTOCOL.md",
+    "intake/ANSWERS.md"
+   ],
+   "example": null,
+   "recipe": null
+  },
+  {
+   "id": "T31",
+   "title": "Static download page",
+   "tier": "EASY",
+   "size": 2,
+   "depends": [],
+   "acceptance": "go test ./internal/docscheck/ -count=1 -run TestDownloadPage",
+   "status": "todo",
+   "owner": null,
+   "attempts": 0,
+   "rung": 0,
+   "files": [
+    "site/index.html"
+   ],
+   "tests": [
+    "internal/docscheck/docs_test.go"
+   ],
+   "context": [
+    "RELEASE_REPO",
+    "PLAN.md",
+    "cmd/autowifi/main.go"
+   ],
+   "example": null,
+   "recipe": null
+  },
+  {
+   "id": "T32",
+   "title": "Release build script and GitHub workflows",
+   "tier": "MEDIUM",
+   "size": 3,
+   "depends": [
+    "T14"
+   ],
+   "acceptance": "bash scripts/build-release.sh v0.0.1-test && bash scripts/check-dist.sh v0.0.1-test",
+   "status": "todo",
+   "owner": null,
+   "attempts": 0,
+   "rung": 0,
+   "files": [
+    "scripts/build-release.sh",
+    ".github/workflows/release.yml",
+    ".github/workflows/pages.yml"
+   ],
+   "tests": [
+    "scripts/check-dist.sh"
+   ],
+   "context": [
+    "RELEASE_REPO",
+    "cmd/autowifi/main.go",
+    "internal/docscheck/docs_test.go",
+    "scripts/test-android.sh"
+   ],
+   "example": null,
+   "recipe": null
+  }
+ ]
+}

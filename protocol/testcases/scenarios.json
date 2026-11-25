@@ -1,0 +1,12 @@
+{
+  "comment": "Run check_once against the mock portal. mock.* are /__mock/ settings applied after reset. credentials null = none stored. expect.counters are read from /__mock/state after the check.",
+  "cases": [
+    {"name": "captive via redirect, correct password", "mock": {"style": "redirect"}, "credentials": {"username": "f20250001", "password": "correct-horse"}, "expect": {"outcome": "logged_in", "counters": {"logins_ok": 1, "logins_failed": 0}}},
+    {"name": "captive via JS page, correct password", "mock": {"style": "page"}, "credentials": {"username": "f20250001", "password": "correct-horse"}, "expect": {"outcome": "logged_in", "counters": {"logins_ok": 1, "logins_failed": 0}}},
+    {"name": "wrong password", "mock": {"style": "redirect"}, "credentials": {"username": "f20250001", "password": "wrong"}, "expect": {"outcome": "rejected", "counters": {"logins_ok": 0, "logins_failed": 1}}},
+    {"name": "already logged in", "mock": {"style": "redirect", "authenticated": true}, "credentials": {"username": "f20250001", "password": "correct-horse"}, "expect": {"outcome": "online", "counters": {"logins_ok": 0, "logins_failed": 0}}},
+    {"name": "portal answers 500", "mock": {"style": "redirect", "fail": 5}, "credentials": {"username": "f20250001", "password": "correct-horse"}, "expect": {"outcome": "portal_error", "counters": {"logins_ok": 0, "logins_failed": 0}}},
+    {"name": "form field renamed", "mock": {"style": "redirect", "fields": {"username": "user_id"}}, "credentials": {"username": "f20250001", "password": "correct-horse"}, "expect": {"outcome": "form_changed", "counters": {"logins_ok": 0, "logins_failed": 0}}},
+    {"name": "no credentials stored", "mock": {"style": "redirect"}, "credentials": null, "expect": {"outcome": "no_credentials", "counters": {"logins_ok": 0, "logins_failed": 0}}}
+  ]
+}

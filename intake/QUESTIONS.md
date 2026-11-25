@@ -1,6 +1,5 @@
 # Open questions
 
-1. What are the exact BITS Pilani Wi-Fi SSID names from iPhone Wi-Fi settings needed for the Apple Shortcuts automation trigger?
-2. What are the exact FortiGate portal form action URL, input field names, and keepalive/logout URL formats captured on campus Wi-Fi?
-3. Does the fw.bits-pilani.ac.in:8090 TLS certificate validate against standard OS trust stores on macOS, Windows, Ubuntu, and Android, or is a pinned host certificate needed?
-4. What exact 4Tredir value does the campus portal expect, and what exact HTTP status or response body text distinguishes rejected credentials from transient portal errors?
+1. What are the exact FortiGate portal action URL and form field names on campus (to be confirmed using the capture diagnostic command against the configurable defaults)?
+2. What are the exact BITS campus Wi-Fi SSID names shown in iPhone Wi-Fi settings for the iOS Shortcuts automation guide?
+3. Is the *.bits-pilani.ac.in certificate on port 8090 trusted by default macOS, Windows, Linux, and Android trust stores, or does any OS require pinning fw.bits-pilani.ac.in?

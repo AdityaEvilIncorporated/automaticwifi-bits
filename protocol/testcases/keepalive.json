@@ -1,0 +1,10 @@
+{
+  "cases": [
+    {"name": "keepalive page", "status": 200, "body": "<html><h2>Authentication Keepalive</h2><p>This browser window is used to keep your authentication session active.</p></html>", "expect": {"alive": true}},
+    {"name": "redirect means expired", "status": 303, "body": "", "expect": {"alive": false}},
+    {"name": "fgtauth in body means expired", "status": 200, "body": "<script>window.location=\"https://fw.bits-pilani.ac.in:8090/fgtauth?abc\"</script>", "expect": {"alive": false}},
+    {"name": "login form means expired", "status": 200, "body": "<form><input name=username><input type=password name=password></form>", "expect": {"alive": false}},
+    {"name": "server error", "status": 500, "body": "", "expect": {"alive": false}},
+    {"name": "204 is alive", "status": 204, "body": "", "expect": {"alive": true}}
+  ]
+}

@@ -16,3 +16,5 @@
 1-3. Will be captured on campus with the "capture" diagnostic; treat them as configurable settings with the standard FortiGate defaults, and add a checklist item "confirm portal fields, SSIDs and certificate on campus" to the release steps. Do not block the build on them.
 4. Linux: Secret Service API (works with GNOME Keyring and KWallet; e.g. go-keyring). If no Secret Service is running, store in ~/.config/autowifi-bits/credentials with mode 600 and show a one-time warning.
 5. No code signing for the first release. The download page documents: macOS = right-click → Open the first time (Gatekeeper); Windows = "More info → Run anyway" (SmartScreen); Android = allow install from this source. Keep signing/notarization as a later option.
+
+6. APK only, via GitHub Releases. 1-5 and 7: already answered: configurable FortiGate defaults, confirmed on campus later; Linux = Secret Service. Intake is complete.

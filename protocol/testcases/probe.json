@@ -1,0 +1,21 @@
+{
+  "cases": [
+    {"name": "neverssl normal page", "status": 200, "location": "", "body": "<html><head><title>NeverSSL - Connecting ...</title></head><body>NeverSSL</body></html>", "expect": {"kind": "online", "magic": ""}},
+    {"name": "generate_204 online", "status": 204, "location": "", "body": "", "expect": {"kind": "online", "magic": ""}},
+    {"name": "303 redirect to fgtauth", "status": 303, "location": "https://fw.bits-pilani.ac.in:8090/fgtauth?0a1b2c3d4e5f6789", "body": "", "expect": {"kind": "captive", "magic": "0a1b2c3d4e5f6789"}},
+    {"name": "302 redirect host uppercase", "status": 302, "location": "https://FW.BITS-PILANI.AC.IN:8090/fgtauth?abc123", "body": "", "expect": {"kind": "captive", "magic": "abc123"}},
+    {"name": "redirect to fgtauth with empty query", "status": 302, "location": "https://fw.bits-pilani.ac.in:8090/fgtauth?", "body": "", "expect": {"kind": "malformed", "magic": ""}},
+    {"name": "redirect to other portal", "status": 302, "location": "https://login.example-hotel.com/portal?x=1", "body": "", "expect": {"kind": "foreign", "magic": ""}},
+    {"name": "redirect to look-alike host", "status": 302, "location": "https://fw.bits-pilani.ac.in.evil.example:8090/fgtauth?abc123", "body": "", "expect": {"kind": "foreign", "magic": ""}},
+    {"name": "redirect to right host wrong port", "status": 302, "location": "https://fw.bits-pilani.ac.in:8443/fgtauth?abc123", "body": "", "expect": {"kind": "foreign", "magic": ""}},
+    {"name": "redirect to right host over http", "status": 302, "location": "http://fw.bits-pilani.ac.in:8090/fgtauth?abc123", "body": "", "expect": {"kind": "foreign", "magic": ""}},
+    {"name": "200 page with JS window.location", "status": 200, "location": "", "body": "<html><body><script language=\"JavaScript\">window.location=\"https://fw.bits-pilani.ac.in:8090/fgtauth?050e0a3f0e1c3b2a\";</script></body></html>", "expect": {"kind": "captive", "magic": "050e0a3f0e1c3b2a"}},
+    {"name": "200 page with escaped slashes", "status": 200, "location": "", "body": "<script>var u = \"https:\\/\\/fw.bits-pilani.ac.in:8090\\/fgtauth?77aa88bb\";</script>", "expect": {"kind": "captive", "magic": "77aa88bb"}},
+    {"name": "magic stops at non-alphanumeric", "status": 200, "location": "", "body": "<a href=\"https://fw.bits-pilani.ac.in:8090/fgtauth?deadBEEF01&x=1\">login</a>", "expect": {"kind": "captive", "magic": "deadBEEF01"}},
+    {"name": "fgtauth text without magic", "status": 200, "location": "", "body": "<script>window.location=\"https://fw.bits-pilani.ac.in:8090/fgtauth?\";</script>", "expect": {"kind": "malformed", "magic": ""}},
+    {"name": "fgtauth mention on another host is online", "status": 200, "location": "", "body": "<p>Docs mention https://other.example:8090/fgtauth?abc</p>", "expect": {"kind": "online", "magic": ""}},
+    {"name": "500 from probe is foreign", "status": 500, "location": "", "body": "error", "expect": {"kind": "foreign", "magic": ""}},
+    {"name": "custom portal host and port", "config": {"portal_host": "127.0.0.1", "portal_port": 9443}, "status": 303, "location": "https://127.0.0.1:9443/fgtauth?m1", "body": "", "expect": {"kind": "captive", "magic": "m1"}},
+    {"name": "default host ignored with custom config", "config": {"portal_host": "127.0.0.1", "portal_port": 9443}, "status": 303, "location": "https://fw.bits-pilani.ac.in:8090/fgtauth?m1", "body": "", "expect": {"kind": "foreign", "magic": ""}}
+  ]
+}
