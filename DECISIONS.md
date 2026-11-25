@@ -89,3 +89,4 @@
   timer (a stale keepalive timer logged straight back in); Ctrl-C handling decided from the parsed
   subcommand (--config before it no longer traps SIGINT); guide step number. The PowerShell script
   could not be parse-checked (pwsh in Docker hung); real Windows stays on the manual checklist.
+- 2026-11-25 Release second opinion round 2: "concerns", 1 low (PromptForCredential exception exiting 0) → fixed with $ErrorActionPreference = 'Stop'.

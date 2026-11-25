@@ -89,8 +89,10 @@ func trimOne(s string) string {
 // -UserName mandatory in Windows PowerShell 5.1 and then prompts on the hidden console). The
 // result goes to stdout (a pipe to this process only) as "<user>\n<password>" in UTF-8; Cancel
 // prints nothing. No -NonInteractive: it disables the prompt. The OutputEncoding line is
-// guarded in case the hidden console handle is unusable.
-const credScript = `try { [Console]::OutputEncoding = [System.Text.Encoding]::UTF8 } catch {}
+// guarded in case the hidden console handle is unusable. ErrorActionPreference Stop makes a
+// failing dialog exit non-zero (Windows PowerShell 5.1 would otherwise continue and exit 0).
+const credScript = `$ErrorActionPreference = 'Stop'
+try { [Console]::OutputEncoding = [System.Text.Encoding]::UTF8 } catch {}
 $c = $Host.UI.PromptForCredential('AutoWiFi BITS', 'BITS campus ID and password', '', '')
 if ($c) { [Console]::Out.Write($c.UserName + "` + "`n" + `" + $c.GetNetworkCredential().Password) }`
 

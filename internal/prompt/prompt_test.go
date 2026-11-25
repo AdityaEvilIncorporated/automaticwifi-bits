@@ -70,6 +70,9 @@ func TestCredScriptAvoidsGetCredentialMessageSet(t *testing.T) {
 	if strings.Contains(credScript, "Get-Credential") || !strings.Contains(credScript, "$Host.UI.PromptForCredential(") {
 		t.Errorf("credScript must use $Host.UI.PromptForCredential:\n%s", credScript)
 	}
+	if !strings.HasPrefix(credScript, "$ErrorActionPreference = 'Stop'") {
+		t.Error("a failing dialog must end PowerShell with an error, not exit 0 like Cancel")
+	}
 	if strings.Contains(credScript, "-NonInteractive") {
 		t.Error("-NonInteractive disables the credential prompt")
 	}
