@@ -375,7 +375,7 @@
         "T13"
       ],
       "acceptance": "go test ./cmd/autowifi/ ./internal/agent/ -count=1",
-      "status": "doing",
+      "status": "done",
       "owner": "supervisor",
       "attempts": 0,
       "rung": 0,

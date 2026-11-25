@@ -5,12 +5,8 @@ Do routine review actions (merge/reject/take, small follow-up fixes with tests, 
 dev) without asking; report afterwards. Stop only for what CLAUDE.md reserves for a human.
 
 ## Current task
-Review round 1 done (2026-11-25). Merged: T01 T02 T03 T04 T08 T10 T11 T12 T21 T23 T31.
-T30: rejected once, resubmission good but merge conflicted (REVIEW_L1.md on both sides) and the
-merge script dropped the branch; recovered commit dcc95c8, took it, added the Get Group step, done.
-A redundant re-run of T30 (branch task/T30, based on stale dev, lacks the Get Group action) was NOT
-merged; dev keeps the reviewed guide. The branch can be deleted.
-Round 2 merged: T10W, T22. Round 3 merged: T05, T09, T06, T13 (T13 + fix: form action shown without query/fragment). T07 (tlsconf) done by me: 17d553a.
+T14 done (2026-11-25): desktop agent, CLI, tray, prompts, lock, e2e. Next HARD: T24 (Android app).
+Earlier: review rounds 1-3 merged everything except T24/T32; T07 done by me (17d553a).
 
 ## Done
 - intake read; PLAN.md, ARCHITECTURE.md, SCHEDULE.md, DECISIONS.md written.
@@ -36,17 +32,20 @@ Round 2 merged: T10W, T22. Round 3 merged: T05, T09, T06, T13 (T13 + fix: form a
 See DECISIONS.md.
 
 ## Next 3 steps
-1. bs-task.py queue: review T06, then T13 (both unblocked by T07).
-2. Start T14 (agent/CLI/tray) in parallel; it needs T06/T13 merged before its e2e test.
-3. T14 agent/CLI/tray once T06, T09, T13 are merged. In T14: open update URLs only if they start with https://github.com/.
+1. bs-task.py queue: review T32 (release script/workflows; unblocked by T14).
+2. T24 Android app (HARD, mine): app module, PortalTls.kt, Keystore store, APK via Docker
+   android-sdk image; run second-opinion on a task/T24 branch before merging.
+3. Then Definition of done (security-reviewer, e2e-runner, TEST_REPORT, SHIPPING, deploy).
 
 ## Known problems
+- Desktop GUI paths (tray, osascript/Get-Credential/zenity dialogs, toasts, Run key, LaunchAgent
+  load) are build-checked and unit-tested but not exercised on real Windows/Linux desktops; the
+  macOS tray was smoke-run here (starts, off_campus, clean SIGTERM exit). Release checklist item.
 - bs-task.py merge conflicts when dev already has tasks/<ID>/REVIEW_L1.md (rejected tasks) and then
   deletes task/<ID>. Do not commit REVIEW_L1.md of tasks still in flight; recover with git fsck.
 - ParseForms (T04) relies on the html5 tree: a <form> placed directly inside <table> loses its
   inputs (html5 foster-parenting). Standard FortiGate pages nest the table inside the form, so OK
   for now; if `capture` on campus shows no fields, switch to a tokenizer-based pass.
-- internal/deps pins modules in go.mod; remove imports there as real packages import them (T14).
 - No Android SDK locally; APK build planned via Docker image in T24.
 - Campus facts (fields, cert trust, SSIDs) unconfirmed by design: campus checklist in PLAN.md.
 

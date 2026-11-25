@@ -28,3 +28,15 @@
   time; `second-opinion.sh release` before deploy covers this code.
 - 2026-11-25 L1 "concerns" on T05 (needle case) and T09 (notify on error) were false positives:
   PortalBase() lowercases the host; the contract requires counting a failed Notify as sent.
+- 2026-11-25 T14 desktop agent: one agent per user (flock / Local\ named mutex); other autowifi
+  processes talk to it with kick files (kick-creds, kick-manual, kick-logout) in the config dir,
+  polled every 2 s, so two processes never write state.json at once. First run without
+  credentials asks once (terminal or native dialog) and turns on start at login.
+- 2026-11-25 T14 second opinion (Gemini) ran twice on task/T14 (CLI/tray/prompt; the agent loop in
+  3e26b53 was already on dev). Round 1 "block": fixed all 11 (incl. -NonInteractive breaking
+  Get-Credential, headless Linux tray panic). Round 2 "concerns": fixed 6; accepted 2 low ones:
+  `status` briefly takes the agent lock to test it (harmless), and checkUpdates has no test
+  (hard-coded GitHub URL; covered by update package tests).
+- 2026-11-25 Credential dialogs: macOS osascript with prompt text as argv; Windows PowerShell
+  Get-Credential (UTF-8 over a stdout pipe only); Linux zenity/kdialog only with a display.
+  Untested on real Windows/Linux desktops: on the release checklist.
