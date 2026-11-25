@@ -11,7 +11,7 @@ import javax.net.ssl.SSLContext
 import javax.net.ssl.TrustManagerFactory
 
 /** Starts the Go mock portal binary ($MOCKPORTAL_BIN) for one test class. */
-class MockPortal private constructor(private val proc: Process, val probeBase: String, val portalHost: String, val portalPort: Int, val caPem: File) : AutoCloseable {
+class MockPortal private constructor(private val proc: Process, val probeBase: String, val portalHost: String, val portalPort: Int, val caPem: File, val goSpki: String) : AutoCloseable {
     companion object {
         fun available(): Boolean = System.getenv("MOCKPORTAL_BIN")?.let { File(it).canExecute() } == true
 
@@ -25,7 +25,7 @@ class MockPortal private constructor(private val proc: Process, val probeBase: S
                 .redirectError(ProcessBuilder.Redirect.INHERIT).start()
             val line = p.inputStream.bufferedReader().readLine() ?: error("mockportal exited")
             val cfg = JSONObject(line)
-            return MockPortal(p, "http://127.0.0.1:$probe", cfg.getString("portal_host"), cfg.getInt("portal_port"), ca)
+            return MockPortal(p, "http://127.0.0.1:$probe", cfg.getString("portal_host"), cfg.getInt("portal_port"), ca, cfg.getString("pinned_cert_sha256"))
         }
     }
 
@@ -48,6 +48,9 @@ class MockPortal private constructor(private val proc: Process, val probeBase: S
         val c = URL("$probeBase/__mock/$path").openConnection() as HttpURLConnection
         return JSONObject(c.inputStream.bufferedReader().readText())
     }
+
+    fun cert(): java.security.cert.X509Certificate =
+        CertificateFactory.getInstance("X.509").generateCertificate(caPem.inputStream()) as java.security.cert.X509Certificate
 
     override fun close() { proc.destroy(); caPem.delete() }
 }

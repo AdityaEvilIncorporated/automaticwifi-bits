@@ -14,6 +14,7 @@ import (
 	"syscall"
 
 	"autowifi/internal/mockportal"
+	"autowifi/internal/tlsconf"
 )
 
 func main() {
@@ -32,7 +33,10 @@ func main() {
 			os.Exit(1)
 		}
 	}
-	_ = json.NewEncoder(os.Stdout).Encode(s.Config())
+	cfg := s.Config()
+	// Go's SPKI pin of the mock certificate, so the Kotlin tests can check they compute the same.
+	cfg.PinnedCertSHA256 = tlsconf.SPKISHA256(s.Portal.Certificate())
+	_ = json.NewEncoder(os.Stdout).Encode(cfg)
 
 	sig := make(chan os.Signal, 1)
 	signal.Notify(sig, os.Interrupt, syscall.SIGTERM)
